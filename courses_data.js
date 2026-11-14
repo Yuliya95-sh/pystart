@@ -61,6 +61,7 @@ print("a", "b", "c", sep="")` },
               <h3>Комментарии</h3>
               <p>Всё, что стоит после символа <code>#</code>, интерпретатор игнорирует. Комментарии пишут для людей: чтобы пояснить код или временно «выключить» строку.</p>` },
             { t: "note", kind: "ent", title: "Типичный вопрос ЕНТ", html: `<p>Что выведет <code>print("A", "B", sep="", end="*")</code>? Ответ: <code>AB*</code> — между значениями пустая строка, в конце звёздочка, а перевода строки нет.</p>` },
+            { t: "note", title: "Стиль кода: PEP 8", html: `<p>PEP 8 — официальные правила оформления кода на Python. Главное для начала: отступ — 4 пробела; пробелы вокруг <code>=</code>, <code>+</code>, <code>==</code> и после запятой (<code>a = b + 1</code>, <code>print(x, y)</code>); но <b>без</b> пробелов вокруг <code>=</code> у именованных параметров (<code>sep="-"</code>); понятные имена переменных в нижнем регистре через подчёркивание (<code>total_sum</code>, а не <code>TS</code>); строка не длиннее 79 символов.</p>` },
           ],
         },
         {
@@ -97,6 +98,13 @@ print(str(10) + "5")     # склейка строк
 print(int(3.99), int(-3.99))
 print(bool(0), bool(7), bool(""))` },
             { t: "note", kind: "warn", title: "Осторожно", html: `<p><code>int("3.5")</code> вызовет ошибку <code>ValueError</code>: строку с точкой сначала нужно превратить в <code>float</code>: <code>int(float("3.5"))</code>.</p>` },
+            { t: "html", html: `<h3>Точность вещественных чисел</h3><p>Компьютер хранит <code>float</code> в двоичной системе, и многие десятичные дроби (например, 0.1) записываются в ней бесконечно — поэтому хранятся с крошечной погрешностью. Вещественные числа нельзя сравнивать через <code>==</code>: сравнивают с допуском или округляют.</p>` },
+            { t: "code", code: py`
+print(0.1 + 0.2)
+print(0.1 + 0.2 == 0.3)
+print(round(0.1 + 0.2, 10) == 0.3)
+print(abs((0.1 + 0.2) - 0.3) < 1e-9)    # сравнение с допуском
+print(10 ** 20, 1e20)                   # int точный, float — приближённый` },
             { t: "html", html: `<h3>Множественное присваивание</h3><p>Python позволяет присвоить несколько значений за раз и поменять переменные местами без третьей переменной.</p>` },
             { t: "code", code: py`
 a, b, c = 1, 2, 3
@@ -895,6 +903,68 @@ while x != 0:
 print("Положительных:", cnt, "Максимум:", mx)` },
           ],
         },
+        {
+          id: "l6",
+          title: "Флаги, трассировка и поиск ошибок",
+          blocks: [
+            { t: "html", html: `<h3>Флаг</h3><p><b>Флаг</b> — логическая переменная, которая запоминает, произошло ли событие хотя бы раз. До цикла флагу дают начальное значение (обычно <code>False</code>), а внутри цикла меняют, если событие случилось. Ответ печатают <b>после</b> цикла.</p>` },
+            { t: "code", input: "4\n3\n-1\n7\n2", code: py`
+n = int(input())
+has_negative = False
+for _ in range(n):
+    x = int(input())
+    if x < 0:
+        has_negative = True
+print("YES" if has_negative else "NO")` },
+            { t: "code", input: "2486", code: py`
+# Все ли цифры числа чётные?
+n = int(input())
+all_even = True
+while n > 0:
+    if n % 10 % 2 != 0:
+        all_even = False
+        break
+    n //= 10
+print(all_even)` },
+            { t: "html", html: `<h3>Трассировка</h3><p>В заданиях ЕНТ часто нужно «выполнить программу в уме». Удобно вести <b>таблицу трассировки</b>: строка таблицы — одна итерация, столбцы — значения переменных.</p>` },
+            { t: "code", code: py`
+s = 0
+i = 1
+while i < 10:
+    s += i
+    i *= 3
+print(s)` },
+            { t: "html", html: `<table style="max-width:420px">
+              <tr><th>Шаг</th><th>Условие i &lt; 10</th><th>s</th><th>i</th></tr>
+              <tr><td>старт</td><td>—</td><td>0</td><td>1</td></tr>
+              <tr><td>1</td><td>1 &lt; 10 — да</td><td>1</td><td>3</td></tr>
+              <tr><td>2</td><td>3 &lt; 10 — да</td><td>4</td><td>9</td></tr>
+              <tr><td>3</td><td>9 &lt; 10 — да</td><td>13</td><td>27</td></tr>
+              <tr><td>4</td><td>27 &lt; 10 — нет, выход</td><td>13</td><td>27</td></tr></table>` },
+            { t: "html", html: `<h3>Типичные ошибки в циклах</h3>
+              <table>
+                <tr><th>Ошибка</th><th>Симптом</th><th>Исправление</th></tr>
+                <tr><td><code>range(1, n)</code> вместо <code>range(1, n + 1)</code></td><td>не обработан последний элемент</td><td>правая граница не включается — прибавьте 1</td></tr>
+                <tr><td>накопитель <code>s = 0</code> внутри цикла</td><td>сумма «сбрасывается» на каждой итерации</td><td>инициализация — до цикла</td></tr>
+                <tr><td><code>print</code> с отступом внутри цикла</td><td>ответ печатается много раз</td><td>уберите отступ</td></tr>
+                <tr><td>в <code>while</code> не меняется переменная условия</td><td>бесконечный цикл</td><td>измените её в теле цикла</td></tr>
+                <tr><td><code>mx = 0</code> для чисел любого знака</td><td>неверный максимум для отрицательных</td><td>первый элемент или <code>float('-inf')</code></td></tr>
+              </table>
+              <p>Найдите ошибку в программе, которая должна выводить сумму чисел от 1 до 5 (правильный ответ 15), а потом сравните с исправленной версией.</p>` },
+            { t: "code", code: py`
+n = 5
+for i in range(1, n):
+    s = 0
+    s += i
+print(s)` },
+            { t: "code", code: py`
+n = 5
+s = 0                      # накопитель — до цикла
+for i in range(1, n + 1):  # n включительно
+    s += i
+print(s)` },
+          ],
+        },
       ],
 
       tasks: [
@@ -1085,6 +1155,21 @@ for i in range(1, 10, 2):
 print(s)`,
           options: ["45", "20", "25", "16"], answer: 2,
           explain: "Складываются нечётные числа 1 + 3 + 5 + 7 + 9 = 25." },
+        { type: "single", q: "Программа должна выводить сумму чисел от 1 до 10 (то есть 55), но выводит 45. В чём ошибка?", code: py`
+s = 0
+for i in range(1, 10):
+    s += i
+print(s)`,
+          options: ["range(1, 10) не включает 10 — нужно range(1, 11)", "s нужно начинать с 1", "Нужно писать s = s + 1", "print должен быть внутри цикла"], answer: 0,
+          explain: "Цикл перебирает 1…9, их сумма 45. Правая граница range не включается, поэтому для 10 нужно <code>range(1, 11)</code>." },
+        { type: "fill", q: "Выполните трассировку. Что выведет программа?", code: py`
+s = 0
+i = 1
+while i < 10:
+    s += i
+    i *= 3
+print(s)`, answer: ["13"],
+          explain: "i принимает значения 1, 3, 9 (потом 27 — выход). s = 1 + 3 + 9 = 13." },
       ],
     },
 
@@ -1908,6 +1993,80 @@ for row in a:
     print(*[f"{v:3}" for v in row])` },
           ],
         },
+        {
+          id: "l8",
+          title: "Сложность алгоритмов и метод двух указателей",
+          blocks: [
+            { t: "html", html: `
+              <p>Один и тот же результат можно получить разными алгоритмами, и они работают с очень разной скоростью. <b>Асимптотическая сложность</b> показывает, как растёт число операций при росте размера данных n. Константы и младшие слагаемые отбрасывают: 3n² + 5n + 7 → O(n²).</p>
+              <table>
+                <tr><th>Класс</th><th>Название</th><th>Пример</th><th>n = 1 000 000</th></tr>
+                <tr><td>O(1)</td><td>константная</td><td>обращение <code>a[i]</code>, <code>len(a)</code>, <code>x in set</code></td><td>1 шаг</td></tr>
+                <tr><td>O(log n)</td><td>логарифмическая</td><td>бинарный поиск</td><td>≈ 20 шагов</td></tr>
+                <tr><td>O(n)</td><td>линейная</td><td>линейный поиск, <code>sum</code>, <code>max</code>, <code>x in list</code></td><td>10⁶</td></tr>
+                <tr><td>O(n log n)</td><td>линейно-логарифмическая</td><td><code>sorted()</code>, сортировка слиянием</td><td>≈ 2·10⁷</td></tr>
+                <tr><td>O(n²)</td><td>квадратичная</td><td>пузырёк, вложенные циклы по всем парам</td><td>10¹² — слишком долго</td></tr>
+              </table>
+              <p><b>O</b> — оценка сверху (хуже не будет), <b>Ω</b> — оценка снизу (быстрее не будет), <b>Θ</b> — точная оценка, когда верхняя и нижняя совпадают. Например, линейный поиск: O(n) в худшем случае и Ω(1) в лучшем (элемент первый).</p>` },
+            { t: "code", code: py`
+def linear_steps(a, x):
+    steps = 0
+    for v in a:
+        steps += 1
+        if v == x:
+            break
+    return steps
+
+def binary_steps(a, x):
+    lo, hi, steps = 0, len(a) - 1, 0
+    while lo <= hi:
+        steps += 1
+        mid = (lo + hi) // 2
+        if a[mid] == x:
+            break
+        elif a[mid] < x:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return steps
+
+for n in [10, 1000, 1000000]:
+    a = list(range(n))
+    print(f"n = {n}: линейный — {linear_steps(a, n - 1)} шагов, бинарный — {binary_steps(a, n - 1)}")` },
+            { t: "html", html: `<h3>Метод двух указателей</h3><p>Два индекса движутся по массиву навстречу друг другу (или в одном направлении), и задача решается за один проход — O(n) вместо O(n²) при переборе всех пар. Пример: найти в <b>отсортированном</b> массиве два числа с суммой S. Если сумма мала — двигаем левый указатель вправо, если велика — правый влево.</p>` },
+            { t: "code", code: py`
+a = [1, 3, 4, 6, 8, 11]
+S = 10
+i, j = 0, len(a) - 1
+while i < j:
+    t = a[i] + a[j]
+    print(f"a[{i}] + a[{j}] = {t}")
+    if t == S:
+        print("Найдено:", a[i], a[j])
+        break
+    elif t < S:
+        i += 1
+    else:
+        j -= 1
+else:
+    print("Пары нет")` },
+            { t: "html", html: `<h3>Слияние двух отсортированных списков</h3><p>Ещё одно применение двух указателей — слить два отсортированных списка в один за O(n + m). На этом приёме основана сортировка слиянием (модуль 6).</p>` },
+            { t: "code", code: py`
+a = [1, 4, 7, 10]
+b = [2, 3, 8]
+res = []
+i = j = 0
+while i < len(a) and j < len(b):
+    if a[i] <= b[j]:
+        res.append(a[i])
+        i += 1
+    else:
+        res.append(b[j])
+        j += 1
+res += a[i:] + b[j:]       # дописываем остаток
+print(res)` },
+          ],
+        },
       ],
 
       tasks: [
@@ -2077,6 +2236,17 @@ print(m[1][2])`, answer: ["6"],
           explain: "Два вложенных цикла по n элементов дают порядка n² сравнений. O(n log n) — у быстрой сортировки и встроенной <code>sorted</code>." },
         { type: "fill", q: "Что выведет команда?", code: py`print(*[1, 2, 3], sep="-")`, answer: ["1-2-3"],
           explain: "<code>*</code> распаковывает список в отдельные аргументы print, а <code>sep</code> задаёт разделитель между ними." },
+        { type: "matching", q: "Сопоставьте операцию и её сложность в худшем случае.",
+          pairs: [
+            { left: "Обращение к элементу a[i]", right: "O(1)" },
+            { left: "Бинарный поиск", right: "O(log n)" },
+            { left: "Линейный поиск", right: "O(n)" },
+            { left: "Встроенная sorted()", right: "O(n log n)" },
+            { left: "Пузырьковая сортировка", right: "O(n²)" },
+          ], distractors: ["O(2ⁿ)"],
+          explain: "Индекс — прямой доступ к ячейке. Бинарный поиск делит диапазон пополам. Линейный просматривает все элементы. sorted() использует Timsort. Пузырёк — два вложенных цикла." },
+        { type: "fill", q: "Какое наибольшее число сравнений понадобится бинарному поиску в отсортированном массиве из 1000 элементов?", answer: ["10"],
+          explain: "Каждое сравнение уменьшает диапазон вдвое: 1000 → 500 → 250 → … → 1. 2¹⁰ = 1024 ≥ 1000, поэтому достаточно 10 шагов." },
       ],
     },
     /* ====================================================
@@ -2319,6 +2489,26 @@ def quick_sort(a):
     return quick_sort(less) + [pivot] + quick_sort(more)
 
 print(quick_sort([6, 3, 8, 2, 7, 4]))` },
+            { t: "html", html: `<h3>Сортировка слиянием (Merge Sort)</h3><p>Тоже «разделяй и властвуй», но наоборот: делим список пополам, рекурсивно сортируем половины и <b>сливаем</b> их двумя указателями (модуль 5). Сложность всегда O(n log n): log n уровней деления, на каждом уровне — слияние за O(n).</p>` },
+            { t: "code", code: py`
+def merge_sort(a):
+    if len(a) <= 1:
+        return a
+    mid = len(a) // 2
+    left = merge_sort(a[:mid])
+    right = merge_sort(a[mid:])
+    res = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            res.append(left[i])
+            i += 1
+        else:
+            res.append(right[j])
+            j += 1
+    return res + left[i:] + right[j:]
+
+print(merge_sort([38, 27, 43, 3, 9, 82, 10]))` },
             { t: "note", kind: "warn", title: "Без базового случая", html: `<p>Если рекурсия не останавливается, Python прервёт её после ~1000 вложенных вызовов с ошибкой <code>RecursionError: maximum recursion depth exceeded</code>. Попробуйте запустить пример ниже.</p>` },
             { t: "code", code: py`
 def forever(n):
@@ -2358,6 +2548,70 @@ def digit_sum(n):
 
 a = [91, 15, 42, 7, 100]
 print(sorted(a, key=digit_sum))` },
+          ],
+        },
+        {
+          id: "l7",
+          title: "Вложенные функции, nonlocal, замыкания и декораторы",
+          blocks: [
+            { t: "html", html: `<p>Функцию можно объявить <b>внутри</b> другой функции. Вложенная функция видна только внутри внешней и может читать её переменные.</p>
+              <p>Python ищет имя переменной по правилу <b>LEGB</b>: Local (внутри текущей функции) → Enclosing (во внешней функции) → Global (в программе) → Built-in (встроенные имена вроде <code>len</code>).</p>
+              <h3>nonlocal</h3><p>Чтобы <b>изменить</b> переменную внешней функции (а не глобальную), используют <code>nonlocal</code> — по аналогии с <code>global</code>.</p>` },
+            { t: "code", code: py`
+def outer():
+    count = 0
+    def inc():
+        nonlocal count
+        count += 1
+    for _ in range(3):
+        inc()
+    return count
+
+print(outer())` },
+            { t: "html", html: `<h3>Замыкания</h3><p>Функция может <b>вернуть</b> вложенную функцию. Та «запоминает» переменные внешней функции даже после того, как внешняя завершилась. Такую функцию называют <b>замыканием</b>.</p>` },
+            { t: "code", code: py`
+def make_multiplier(k):
+    def mul(x):
+        return x * k      # k «запомнилось»
+    return mul
+
+double = make_multiplier(2)
+triple = make_multiplier(3)
+print(double(5), triple(5))
+print(make_multiplier(10)(7))` },
+            { t: "html", html: `<h3>Декораторы</h3><p><b>Декоратор</b> — функция, которая принимает функцию и возвращает новую, «обёрнутую», с дополнительным поведением. Запись <code>@имя_декоратора</code> над <code>def</code> — короткая форма для <code>f = декоратор(f)</code>.</p>` },
+            { t: "code", code: py`
+def logged(func):
+    def wrapper(*args):
+        result = func(*args)
+        print(f"{func.__name__}({', '.join(map(str, args))}) = {result}")
+        return result
+    return wrapper
+
+@logged
+def add(a, b):
+    return a + b
+
+@logged
+def square(x):
+    return x * x
+
+add(2, 3)
+square(7)` },
+            { t: "code", code: py`
+# Декоратор-счётчик вызовов: видно, как много лишней работы делает наивный fib
+def count_calls(func):
+    def wrapper(n):
+        wrapper.calls += 1
+        return func(n)
+    wrapper.calls = 0
+    return wrapper
+
+@count_calls
+def fib(n):
+    return n if n < 2 else fib(n - 1) + fib(n - 2)
+
+print(fib(20), "вызовов:", fib.calls)` },
           ],
         },
       ],
@@ -2636,6 +2890,26 @@ print(fib(7))`, answer: ["13"],
 ___ square(x):
     return x * x`, answer: ["def"],
           explain: "Объявление функции начинается с <code>def</code> (define — определить)." },
+        { type: "single", q: "Что выведет программа?", code: py`
+def f():
+    x = 1
+    def g():
+        nonlocal x
+        x += 10
+    g()
+    return x
+
+print(f())`,
+          options: ["1", "11", "10", "Ошибка"], answer: 1,
+          explain: "<code>nonlocal x</code> позволяет вложенной функции g изменить переменную x внешней функции f: 1 + 10 = 11." },
+        { type: "fill", q: "Что выведет программа?", code: py`
+def make_multiplier(k):
+    def mul(x):
+        return x * k
+    return mul
+
+print(make_multiplier(3)(4))`, answer: ["12"],
+          explain: "make_multiplier(3) возвращает функцию, которая умножает на 3 (замыкание запомнило k = 3). Её вызов с 4 даёт 12." },
       ],
     },
     /* ====================================================
@@ -2757,6 +3031,23 @@ print(codes)` },
             { t: "code", code: py`
 d = {}
 d[[1, 2]] = "список"       # список не может быть ключом` },
+            { t: "html", html: `<h3>Вложенные словари, генераторы множеств и frozenset</h3><p>Значением словаря может быть другой словарь — так хранят структурированные данные (как таблицу «класс → ученики → баллы»). Множества тоже можно строить генератором: <code>{x for ...}</code>. <code>frozenset</code> — неизменяемое множество; в отличие от обычного, оно может быть ключом словаря или элементом другого множества.</p>` },
+            { t: "code", code: py`
+school = {
+    "11А": {"Айбек": 120, "Дана": 131},
+    "11Б": {"Ерлан": 98},
+}
+print(school["11А"]["Дана"])
+school["11Б"]["Мира"] = 115
+for cls, students in school.items():
+    avg = sum(students.values()) / len(students)
+    print(cls, len(students), "уч., средний балл", avg)
+
+evens = {x for x in range(10) if x % 2 == 0}
+print(evens, type(evens))
+key = frozenset([1, 2, 3])
+d = {key: "неизменяемое множество может быть ключом"}
+print(d)` },
           ],
         },
         {
@@ -2870,6 +3161,110 @@ with open("marks.csv", encoding="utf-8") as f:
             { t: "code", code: py`
 with open("нет_такого.txt") as f:
     print(f.read())` },
+          ],
+        },
+        {
+          id: "l7",
+          title: "Обработка ошибок: try – except",
+          blocks: [
+            { t: "html", html: `<p>Ошибка во время выполнения (<b>исключение</b>) обычно останавливает программу. Конструкция <code>try – except</code> позволяет «перехватить» исключение и обработать его: вывести понятное сообщение, попросить ввести данные ещё раз и т.д.</p>
+              <ul><li><code>try:</code> — код, в котором может возникнуть ошибка;</li>
+              <li><code>except ТипОшибки:</code> — что делать при ошибке этого типа (блоков может быть несколько);</li>
+              <li><code>else:</code> — выполняется, если ошибки <b>не было</b>;</li>
+              <li><code>finally:</code> — выполняется <b>всегда</b> (например, закрыть файл).</li></ul>` },
+            { t: "code", input: "0", code: py`
+try:
+    x = int(input())
+    print(100 / x)
+except ValueError:
+    print("Это не целое число")
+except ZeroDivisionError:
+    print("На ноль делить нельзя")` },
+            { t: "code", input: "abc", code: py`
+try:
+    x = int(input())
+    print(100 / x)
+except ValueError:
+    print("Это не целое число")
+except ZeroDivisionError:
+    print("На ноль делить нельзя")` },
+            { t: "html", html: `<h3>Повторный ввод и raise</h3><p><code>except Ошибка as e</code> сохраняет объект ошибки в переменную e — в нём текст сообщения. Оператор <code>raise</code> вызывает исключение самостоятельно, например при неверных по смыслу данных.</p>` },
+            { t: "code", input: "abc\n-5\n17", code: py`
+while True:
+    try:
+        age = int(input())
+        if age < 0:
+            raise ValueError("отрицательный возраст")
+        break
+    except ValueError as e:
+        print("Ошибка:", e, "— попробуйте ещё раз")
+print("Возраст:", age)` },
+            { t: "code", files: { "data.txt": "Привет из файла!" }, code: py`
+for name in ["data.txt", "missing.txt"]:
+    try:
+        f = open(name, encoding="utf-8")
+    except FileNotFoundError:
+        print(name, "— файл не найден")
+    else:
+        print(name, "—", f.read())
+        f.close()
+    finally:
+        print("проверка", name, "завершена")` },
+            { t: "html", html: `<table>
+              <tr><th>Исключение</th><th>Когда возникает</th></tr>
+              <tr><td><code>ValueError</code></td><td>неподходящее значение: <code>int("abc")</code></td></tr>
+              <tr><td><code>TypeError</code></td><td>несовместимые типы: <code>"5" + 3</code></td></tr>
+              <tr><td><code>ZeroDivisionError</code></td><td>деление на ноль</td></tr>
+              <tr><td><code>IndexError</code> / <code>KeyError</code></td><td>нет такого индекса / ключа</td></tr>
+              <tr><td><code>FileNotFoundError</code></td><td>файл не найден</td></tr>
+              <tr><td><code>Exception</code></td><td>«почти любая ошибка» — перехватывать её стоит осторожно, чтобы не скрыть настоящую ошибку в коде</td></tr></table>` },
+          ],
+        },
+        {
+          id: "l8",
+          title: "Форматы CSV и JSON",
+          blocks: [
+            { t: "html", html: `<p><b>CSV</b> (comma-separated values) — таблица в текстовом файле: одна строка — одна запись, значения разделены запятыми (или <code>;</code>). Такие файлы открываются в Excel. Модуль <code>csv</code> правильно обрабатывает кавычки и разделители внутри значений; <code>csv.DictReader</code> превращает каждую строку в словарь по заголовкам первой строки.</p>` },
+            { t: "code", files: { "students.csv": "name,class,score\nАйбек,11А,120\nДана,11А,131\nЕрлан,11Б,98" }, code: py`
+import csv
+
+with open("students.csv", encoding="utf-8") as f:
+    rows = list(csv.DictReader(f))
+
+for r in rows:
+    print(r["name"], r["class"], int(r["score"]))
+best = max(rows, key=lambda r: int(r["score"]))
+print("Лучший результат:", best["name"])` },
+            { t: "code", code: py`
+import csv
+
+data = [["город", "население"], ["Алматы", 2300000], ["Астана", 1500000]]
+with open("cities.csv", "w", encoding="utf-8", newline="") as f:
+    csv.writer(f).writerows(data)
+
+with open("cities.csv", encoding="utf-8") as f:
+    for row in csv.reader(f):
+        print(row)` },
+            { t: "html", html: `<p><b>JSON</b> — текстовый формат для обмена данными между программами и сайтами. Он очень похож на словари и списки Python.</p>
+              <table><tr><th>Python</th><th>JSON</th></tr>
+              <tr><td><code>dict</code></td><td>объект <code>{}</code></td></tr>
+              <tr><td><code>list</code>, <code>tuple</code></td><td>массив <code>[]</code></td></tr>
+              <tr><td><code>str</code>, <code>int</code>, <code>float</code></td><td>строка, число</td></tr>
+              <tr><td><code>True</code> / <code>False</code> / <code>None</code></td><td><code>true</code> / <code>false</code> / <code>null</code></td></tr></table>
+              <p><code>json.dumps</code> / <code>json.loads</code> переводят в строку и обратно; <code>json.dump</code> / <code>json.load</code> — сразу в файл и из файла. Параметр <code>ensure_ascii=False</code> сохраняет кириллицу читаемой.</p>` },
+            { t: "code", code: py`
+import json
+
+student = {"name": "Аружан", "grade": 11, "subjects": ["информатика", "математика"], "ent": 128, "olympiad": False}
+text = json.dumps(student, ensure_ascii=False, indent=2)
+print(text)
+
+with open("student.json", "w", encoding="utf-8") as f:
+    json.dump(student, f, ensure_ascii=False)
+with open("student.json", encoding="utf-8") as f:
+    loaded = json.load(f)
+print(loaded["subjects"][0], type(loaded))
+print(json.loads("[1, 2, null, true]"))` },
           ],
         },
         {
@@ -3185,6 +3580,388 @@ print(c["a"])`, answer: ["3"],
 ___ open("data.txt") as f:
     text = f.read()`, answer: ["with"],
           explain: "Контекстный менеджер <code>with</code> закрывает файл при выходе из блока, даже если внутри произошла ошибка." },
+        { type: "single", q: "Что выведет программа?", code: py`
+try:
+    print(int("12a"))
+except ValueError:
+    print("ошибка")
+finally:
+    print("конец")`, codeOptions: true,
+          options: ["12", "ошибка", "ошибка\nконец", "конец"], answer: 2,
+          explain: "<code>int(\"12a\")</code> вызывает ValueError, срабатывает except. Блок <code>finally</code> выполняется всегда." },
+        { type: "fill", q: "Какой блок конструкции try выполняется всегда — и при ошибке, и без неё?", answer: ["finally"], ignoreCase: true,
+          explain: "<code>finally</code> выполняется в любом случае; <code>else</code> — только если ошибки не было." },
+      ],
+    },
+
+    /* ====================================================
+       МОДУЛЬ 8. Системы счисления и мини-проекты
+       ==================================================== */
+    {
+      id: "m8",
+      icon: "🎲",
+      title: "Системы счисления и мини-проекты",
+      summary: "Модуль random, позиционные системы счисления, bin/oct/hex, перевод между системами; проекты: угадайка, генератор паролей, калькулятор систем счисления.",
+      lessons: [
+        {
+          id: "l1",
+          title: "Модуль random",
+          blocks: [
+            { t: "html", html: `
+              <p>Модуль <code>random</code> генерирует <b>псевдослучайные</b> числа — они вычисляются по формуле, но выглядят случайными.</p>
+              <table>
+                <tr><th>Функция</th><th>Что возвращает</th></tr>
+                <tr><td><code>randint(a, b)</code></td><td>случайное целое из [a; b], оба конца включены</td></tr>
+                <tr><td><code>randrange(a, b, step)</code></td><td>случайное из <code>range(a, b, step)</code> — b не включается</td></tr>
+                <tr><td><code>random()</code></td><td>вещественное из [0; 1)</td></tr>
+                <tr><td><code>uniform(a, b)</code></td><td>вещественное из [a; b]</td></tr>
+                <tr><td><code>choice(seq)</code></td><td>случайный элемент последовательности</td></tr>
+                <tr><td><code>sample(seq, k)</code></td><td>список из k <b>разных</b> элементов</td></tr>
+                <tr><td><code>shuffle(lst)</code></td><td>перемешивает список на месте, возвращает None</td></tr>
+                <tr><td><code>seed(x)</code></td><td>задаёт начальное значение — последовательность становится воспроизводимой</td></tr>
+              </table>` },
+            { t: "code", code: py`
+import random
+
+print(random.randint(1, 6), random.randint(1, 6))     # кубик
+print(round(random.random(), 3))
+print(random.choice(["камень", "ножницы", "бумага"]))
+print(random.sample(range(1, 50), 6))                 # лотерея 6 из 49
+cards = ["A", "K", "Q", "J", "10"]
+random.shuffle(cards)
+print(cards)` },
+            { t: "html", html: `<p>Запустите пример несколько раз — результаты будут разными. С <code>seed</code> они повторяются при каждом запуске; это удобно для отладки и тестов.</p>` },
+            { t: "code", code: py`
+import random
+
+random.seed(2026)
+print([random.randint(1, 100) for _ in range(5)])
+random.seed(2026)
+print([random.randint(1, 100) for _ in range(5)])     # тот же список` },
+            { t: "code", code: py`
+# Эксперимент: частота выпадения граней кубика при 60 000 бросках
+import random
+
+counts = {face: 0 for face in range(1, 7)}
+for _ in range(60000):
+    counts[random.randint(1, 6)] += 1
+for face, k in counts.items():
+    print(face, k, "#" * (k // 500))` },
+          ],
+        },
+        {
+          id: "l2",
+          title: "Системы счисления",
+          blocks: [
+            { t: "html", html: `
+              <p>В <b>позиционной</b> системе счисления значение цифры зависит от её позиции. Основание системы — количество используемых цифр: в двоичной 0 и 1, в восьмеричной 0…7, в шестнадцатеричной 0…9 и A…F (A = 10, …, F = 15).</p>
+              <h3>Перевод в десятичную систему</h3>
+              <p>Каждую цифру умножают на основание в степени её позиции (справа, начиная с 0) и складывают:<br>
+              1011₂ = 1·2³ + 0·2² + 1·2¹ + 1·2⁰ = 8 + 0 + 2 + 1 = 11.<br>
+              2D₁₆ = 2·16 + 13 = 45.</p>
+              <p>В Python это делает <code>int(строка, основание)</code> (основание от 2 до 36).</p>` },
+            { t: "code", code: py`
+print(int("1011", 2), int("17", 8), int("2D", 16), int("Z", 36))
+
+# То же вручную по схеме Горнера: n = n * основание + цифра
+s, base = "2D", 16
+n = 0
+for ch in s:
+    n = n * base + int(ch, 16)
+print(n)` },
+            { t: "html", html: `<h3>Перевод из десятичной системы</h3><p>Число делят на основание с остатком, пока частное не станет 0. Остатки, записанные <b>в обратном порядке</b>, — это цифры числа. Встроенные функции: <code>bin()</code>, <code>oct()</code>, <code>hex()</code> (с префиксами 0b, 0o, 0x) и <code>format(n, "b"/"o"/"X")</code> (без префиксов).</p>` },
+            { t: "code", code: py`
+n = 45
+digits = ""
+while n > 0:
+    print(f"{n} : 2 = {n // 2}, остаток {n % 2}")
+    digits = str(n % 2) + digits
+    n //= 2
+print("45 в двоичной:", digits)
+print(bin(45), oct(45), hex(45))
+print(format(45, "b"), format(45, "o"), format(45, "X"), f"{45:08b}")` },
+            { t: "html", html: `<h3>Связь систем 2, 8 и 16</h3><p>8 = 2³ и 16 = 2⁴, поэтому каждая восьмеричная цифра — это группа из 3 бит (триада), а шестнадцатеричная — из 4 бит (тетрада). Группы отсчитывают <b>справа</b>:<br>
+              101101₂ → 101|101 → 55₈; 101101₂ → 0010|1101 → 2D₁₆.</p>` },
+            { t: "note", kind: "ent", title: "Типовые задачи ЕНТ", html: `<p>• «Сколько единиц в двоичной записи числа?» — <code>bin(n).count("1")</code>.<br>
+              • «Сколько значащих нулей?» — <code>bin(n)[2:].count("0")</code> (срез убирает префикс 0b).<br>
+              • «Сколько разрядов (бит) нужно для числа n?» — <code>len(bin(n)) - 2</code> или <code>n.bit_length()</code>.<br>
+              • Максимальная цифра в системе с основанием k равна k − 1.</p>` },
+            { t: "code", code: py`
+for n in [7, 8, 100, 255, 1024]:
+    b = bin(n)[2:]
+    print(n, b, "единиц:", b.count("1"), "нулей:", b.count("0"), "бит:", n.bit_length())` },
+          ],
+        },
+        {
+          id: "l3",
+          title: "Проект: числовая угадайка",
+          blocks: [
+            { t: "html", html: `<p>Классическая игра: компьютер загадывает число от 1 до 100, игрок угадывает и получает подсказки «больше» / «меньше». В настоящей игре число выбирает <code>random.randint(1, 100)</code>; здесь, чтобы заранее подставить попытки в поле ввода, загаданное число зафиксировано.</p>` },
+            { t: "code", input: "50\n25\n37\n31\n34", code: py`
+import random
+
+secret = 34          # в игре: random.randint(1, 100)
+tries = 0
+while True:
+    guess = int(input("Ваше число: "))
+    tries += 1
+    if guess < secret:
+        print("Загаданное число больше")
+    elif guess > secret:
+        print("Загаданное число меньше")
+    else:
+        print(f"Угадали за {tries} попыток!")
+        break` },
+            { t: "html", html: `<h3>Наоборот: угадывает компьютер</h3><p>Оптимальная стратегия — каждый раз называть середину оставшегося диапазона. Это бинарный поиск: для чисел от 1 до 100 хватает не более 7 попыток, потому что 2⁷ = 128 ≥ 100.</p>` },
+            { t: "code", code: py`
+import random
+
+for secret in [73, 1, 100, random.randint(1, 100)]:
+    lo, hi = 1, 100
+    tries = 0
+    while True:
+        guess = (lo + hi) // 2
+        tries += 1
+        if guess == secret:
+            break
+        elif guess < secret:
+            lo = guess + 1
+        else:
+            hi = guess - 1
+    print(f"Загадано {secret}: угадано за {tries} попыток")` },
+          ],
+        },
+        {
+          id: "l4",
+          title: "Проект: генератор паролей",
+          blocks: [
+            { t: "html", html: `<p>Надёжный пароль длинный и содержит строчные и заглавные буквы, цифры и спецсимволы. Готовые наборы символов есть в модуле <code>string</code>: <code>ascii_lowercase</code>, <code>ascii_uppercase</code>, <code>digits</code>, <code>punctuation</code>.</p>
+              <p>Алгоритм: берём по одному символу из каждой группы (чтобы все группы точно были в пароле), добираем до нужной длины случайными символами из всех групп и перемешиваем.</p>` },
+            { t: "code", code: py`
+import random
+import string
+
+def make_password(length=12, special=True):
+    groups = [string.ascii_lowercase, string.ascii_uppercase, string.digits]
+    if special:
+        groups.append("!@#$%&*?")
+    chars = [random.choice(g) for g in groups]
+    alphabet = "".join(groups)
+    chars += [random.choice(alphabet) for _ in range(length - len(chars))]
+    random.shuffle(chars)
+    return "".join(chars)
+
+for _ in range(3):
+    print(make_password())
+print(make_password(20, special=False))` },
+            { t: "note", kind: "warn", title: "Для настоящих паролей", html: `<p>Модуль <code>random</code> предсказуем и годится для игр и учебных задач. Для настоящих паролей в Python есть модуль <code>secrets</code> с той же идеей: <code>secrets.choice(alphabet)</code>.</p>` },
+            { t: "code", code: py`
+# Проверка надёжности пароля
+def strength(p):
+    score = 0
+    score += len(p) >= 8
+    score += len(p) >= 12
+    score += any(c.islower() for c in p)
+    score += any(c.isupper() for c in p)
+    score += any(c.isdigit() for c in p)
+    score += any(not c.isalnum() for c in p)
+    return ["очень слабый", "очень слабый", "слабый", "слабый", "средний", "надёжный", "очень надёжный"][score]
+
+for p in ["12345", "qwerty123", "Python2026", "k#9Lm!x2Qz7@"]:
+    print(p, "—", strength(p))` },
+          ],
+        },
+        {
+          id: "l5",
+          title: "Проект: калькулятор систем счисления",
+          blocks: [
+            { t: "html", html: `<p>Соберём всё вместе: две функции переводят число в любую систему с основанием от 2 до 36 и обратно. Цифры больше 9 обозначаются латинскими буквами: <code>DIGITS[k]</code> — цифра со значением k.</p>` },
+            { t: "code", input: "2026\n7E5\n16", code: py`
+DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+def to_base(n, b):
+    if n == 0:
+        return "0"
+    res = ""
+    while n > 0:
+        res = DIGITS[n % b] + res
+        n //= b
+    return res
+
+def from_base(s, b):
+    n = 0
+    for ch in s.upper():
+        n = n * b + DIGITS.index(ch)
+    return n
+
+n = int(input("Число в десятичной системе: "))
+for b in (2, 3, 8, 16):
+    print(f"  в {b}-ичной: {to_base(n, b)}")
+s = input("Число для перевода в десятичную: ")
+b = int(input("Его основание: "))
+print(f"{s} ({b}) = {from_base(s, b)} (10)")` },
+            { t: "html", html: `<p>Попробуйте расширить калькулятор: перевод сразу между двумя любыми системами, проверку, что все цифры допустимы для основания, сложение чисел в двоичной системе. Перевод между любыми системами — задача 3 этого модуля.</p>` },
+          ],
+        },
+      ],
+
+      tasks: [
+        {
+          id: "t1",
+          title: "Двоичная запись",
+          level: "Лёгкая",
+          statement: `<p>Дано целое число <code>n</code> (0 ≤ n ≤ 10<sup>9</sup>). В первой строке выведите его двоичную запись (без префикса <code>0b</code>), во второй — количество единиц в ней.</p>`,
+          starter: py`
+n = int(input())
+`,
+          hint: `<p><code>bin(n)</code> возвращает строку с префиксом <code>0b</code> — уберите его срезом <code>[2:]</code> или используйте <code>format(n, "b")</code>. Единицы считает метод строки <code>count</code>.</p>`,
+          solution: py`
+n = int(input())
+b = format(n, "b")
+print(b)
+print(b.count("1"))`,
+          tests: [
+            { input: "10", output: "1010\n2" },
+            { input: "255", output: "11111111\n8" },
+            { input: "0", output: "0\n0", hidden: true },
+            { input: "1", output: "1\n1", hidden: true },
+            { input: "1024", output: "10000000000\n1", hidden: true },
+            { input: "123456789", output: "111010110111100110100010101\n16", hidden: true },
+          ],
+        },
+        {
+          id: "t2",
+          title: "Перевод в k-ичную систему",
+          level: "Средняя",
+          statement: `<p>Даны целое число <code>n</code> (0 ≤ n ≤ 10<sup>9</sup>) и основание <code>k</code> (2 ≤ k ≤ 16), каждое на отдельной строке. Выведите запись числа n в системе с основанием k. Цифры больше 9 обозначайте <b>заглавными</b> буквами A–F.</p>
+            <p>Реализуйте алгоритм деления с остатком сами — <code>format</code> работает только для систем 2, 8 и 16.</p>`,
+          starter: py`
+n = int(input())
+k = int(input())
+DIGITS = "0123456789ABCDEF"
+`,
+          hint: `<p>Пока n &gt; 0: добавляйте <code>DIGITS[n % k]</code> <b>в начало</b> строки результата и делите <code>n //= k</code>. Отдельно обработайте n = 0 — цикл не выполнится ни разу.</p>`,
+          solution: py`
+n = int(input())
+k = int(input())
+DIGITS = "0123456789ABCDEF"
+if n == 0:
+    print(0)
+else:
+    res = ""
+    while n > 0:
+        res = DIGITS[n % k] + res
+        n //= k
+    print(res)`,
+          tests: [
+            { input: "255\n16", output: "FF" },
+            { input: "10\n2", output: "1010" },
+            { input: "1000\n3", output: "1101001" },
+            { input: "0\n7", output: "0", hidden: true },
+            { input: "100\n8", output: "144", hidden: true },
+            { input: "4095\n16", output: "FFF", hidden: true },
+            { input: "31\n5", output: "111", hidden: true },
+            { input: "1000000000\n12", output: "23AA93854", hidden: true },
+          ],
+        },
+        {
+          id: "t3",
+          title: "Перевод между любыми системами",
+          level: "Сложная",
+          statement: `<p>В первой строке записано число <code>s</code> в системе с основанием <code>a</code>, во второй — <code>a</code>, в третьей — <code>b</code> (2 ≤ a, b ≤ 36). Цифры больше 9 — латинские буквы A–Z (A = 10, …, Z = 35), буквы могут быть строчными.</p>
+            <p>Переведите число в систему с основанием b и выведите его (буквы заглавные). Если в записи s есть символ, недопустимый для основания a (например, 9 в восьмеричной), выведите <code>ERROR</code>.</p>
+            <p>Не используйте <code>int(s, a)</code> — переведите вручную.</p>`,
+          starter: py`
+DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+s = input().strip().upper()
+a = int(input())
+b = int(input())
+`,
+          hint: `<p>Два шага через десятичную систему. 1) Схема Горнера: для каждой цифры <code>d = DIGITS.find(ch)</code>; если <code>d == -1</code> или <code>d &gt;= a</code> — ERROR; иначе <code>n = n * a + d</code>. 2) Перевод n в систему b делением с остатком (не забудьте n = 0).</p>`,
+          solution: py`
+DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+s = input().strip().upper()
+a = int(input())
+b = int(input())
+n = 0
+ok = True
+for ch in s:
+    d = DIGITS.find(ch)
+    if d == -1 or d >= a:
+        ok = False
+        break
+    n = n * a + d
+if not ok:
+    print("ERROR")
+elif n == 0:
+    print(0)
+else:
+    res = ""
+    while n > 0:
+        res = DIGITS[n % b] + res
+        n //= b
+    print(res)`,
+          tests: [
+            { input: "FF\n16\n2", output: "11111111" },
+            { input: "1010\n2\n10", output: "10" },
+            { input: "19\n8\n10", output: "ERROR" },
+            { input: "777\n8\n16", output: "1FF", hidden: true },
+            { input: "Z\n36\n10", output: "35", hidden: true },
+            { input: "0\n10\n2", output: "0", hidden: true },
+            { input: "zz\n36\n16", output: "50F", hidden: true },
+            { input: "HELLO\n36\n10", output: "29234652", hidden: true },
+            { input: "12\n3\n3", output: "12", hidden: true },
+            { input: "1G\n16\n10", output: "ERROR", hidden: true },
+          ],
+        },
+      ],
+
+      quiz: [
+        { type: "single", q: "Что выведет команда?", code: py`print(int("101", 2))`,
+          options: ["101", "5", "3", "Ошибка"], answer: 1,
+          explain: "101₂ = 1·4 + 0·2 + 1·1 = 5." },
+        { type: "single", q: "Что выведет команда?", code: py`print(hex(255))`,
+          options: ["ff", "0xff", "FF", "0xFF"], answer: 1,
+          explain: "<code>hex</code> возвращает строку с префиксом <code>0x</code> и строчными буквами. Без префикса и заглавными — <code>format(255, \"X\")</code>." },
+        { type: "single", q: "Сколько единиц в двоичной записи числа 15?",
+          options: ["1", "2", "4", "5"], answer: 2,
+          explain: "15 = 8 + 4 + 2 + 1 = 1111₂ — четыре единицы." },
+        { type: "single", q: "Какие значения может вернуть <code>random.randint(1, 6)</code>?",
+          options: ["1, 2, 3, 4, 5", "1, 2, 3, 4, 5, 6", "0, 1, 2, 3, 4, 5, 6", "Любое вещественное число от 1 до 6"], answer: 1,
+          explain: "У <code>randint(a, b)</code> оба конца включены — в отличие от <code>range</code> и <code>randrange</code>." },
+        { type: "single", q: "Зачем вызывают <code>random.seed(42)</code>?",
+          options: ["Чтобы последовательность «случайных» чисел повторялась при каждом запуске", "Чтобы числа были более случайными", "Чтобы randint возвращал только 42", "Чтобы очистить модуль random"], answer: 0,
+          explain: "Генератор псевдослучайный: при одинаковом начальном значении (seed) он выдаёт одну и ту же последовательность. Это удобно для отладки и тестов." },
+        { type: "multiple", q: "Какие выражения равны 10?", codeOptions: true,
+          options: ["int(\"1010\", 2)", "int(\"10\", 16)", "int(\"12\", 8)", "int(\"101\", 2)", "int(\"A\", 16)"], answer: [0, 2, 4],
+          explain: "1010₂ = 8 + 2 = 10; 12₈ = 8 + 2 = 10; A₁₆ = 10. А 10₁₆ = 16 и 101₂ = 5." },
+        { type: "multiple", q: "Какие выражения возвращают один случайный элемент списка a?", codeOptions: true,
+          options: ["random.choice(a)", "random.shuffle(a)", "random.sample(a, 1)[0]", "random.randint(a)", "a[random.randint(0, len(a) - 1)]"], answer: [0, 2, 4],
+          explain: "<code>shuffle</code> перемешивает список и возвращает None. <code>randint</code> требует два числа. Последний вариант выбирает случайный индекс — верно, ведь randint включает правую границу len(a) − 1." },
+        { type: "matching", q: "Сопоставьте выражение и результат.",
+          pairs: [
+            { left: "bin(10)", right: "0b1010" },
+            { left: "oct(10)", right: "0o12" },
+            { left: "hex(10)", right: "0xa" },
+            { left: "format(10, 'X')", right: "A" },
+          ], distractors: ["0x10", "1010"],
+          explain: "bin, oct и hex возвращают строки с префиксами 0b, 0o, 0x. format с кодом X — шестнадцатеричная запись заглавными буквами без префикса." },
+        { type: "matching", q: "Сопоставьте перевод и способ.",
+          pairs: [
+            { left: "Двоичная → восьмеричная", right: "группы по 3 бита справа" },
+            { left: "Двоичная → шестнадцатеричная", right: "группы по 4 бита справа" },
+            { left: "Десятичная → любая", right: "деление на основание с остатком" },
+            { left: "Любая → десятичная", right: "сумма цифр, умноженных на степени основания" },
+          ], distractors: ["группы по 2 бита справа"],
+          explain: "8 = 2³ и 16 = 2⁴, поэтому восьмеричная цифра — 3 бита, шестнадцатеричная — 4. В десятичную переводят по развёрнутой записи, из десятичной — делением с остатком." },
+        { type: "fill", q: "Чему равно число 1101₂ в десятичной системе?", answer: ["13"],
+          explain: "1·8 + 1·4 + 0·2 + 1·1 = 13." },
+        { type: "fill", q: "Что выведет команда?", code: py`print(int("FF", 16) + 1)`, answer: ["256"],
+          explain: "FF₁₆ = 255, плюс 1 — 256." },
+        { type: "fill", q: "Какая наибольшая цифра используется в семеричной системе счисления?", answer: ["6"],
+          explain: "В системе с основанием k используются цифры от 0 до k − 1." },
+        { type: "fill", q: "Что выведет команда?", code: py`print(f"{5:08b}")`, answer: ["00000101"],
+          explain: "Код <code>b</code> — двоичная запись, <code>08</code> — ширина 8 с дополнением нулями слева." },
       ],
     },
   ],
