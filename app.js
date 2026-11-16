@@ -1,5 +1,5 @@
 /* =========================================================
-   PyStart — логика приложения.
+   Easy Python — логика приложения.
    Разделы файла:
      1. Утилиты
      2. Хранилище прогресса (localStorage)
@@ -619,15 +619,30 @@ def _pystart_exec(code, stdin, extra, echo):
     const o = overallProgress();
     const next = findNext();
     const el = h(`<div class="container">
-      <section class="hero">
-        <h1>${esc(COURSE.title)}</h1>
-        <p>${COURSE.subtitle}</p>
-        <div class="btn-row">
-          ${next ? `<a class="btn btn-primary" href="${next.href}">${o.done ? "Продолжить" : "Начать обучение"}: ${esc(next.label)}</a>` : `<span class="badge ok">Все доступные модули пройдены 🎉</span>`}
-          <a class="btn btn-ghost" href="#/sandbox">Открыть песочницу</a>
+      <section class="hero ep">
+        <div class="ep-main">
+          <div class="ep-blue">
+            <div class="ep-chips"><span class="ep-chip">${COURSE.modules.filter(isReady).length} модулей</span><span class="ep-chip">формат ЕНТ</span><span class="ep-chip">Python в браузере</span></div>
+            <h1 class="ep-logo">Easy<br>Python</h1>
+            <p>${COURSE.subtitle}</p>
+          </div>
+          ${next ? `<a class="ep-bar pink" href="${next.href}">${o.done ? "Продолжить" : "Начать обучение"}: ${esc(next.label)}</a>` : `<span class="ep-bar pink">Все доступные модули пройдены 🎉</span>`}
+          <a class="ep-bar lime" href="#/sandbox">Открыть песочницу</a>
         </div>
-        <div class="stats">
-          <div class="stat"><b>${o.pct}%</b><span>общий прогресс</span></div>
+        <div class="ep-side" aria-hidden="true">
+          <div class="ep-dots"><i></i><i></i><i></i></div>
+<pre class="ep-code"><span class="c"># первая программа</span>
+name = <span class="n">input</span>()
+score = <span class="n">int</span>(<span class="n">input</span>())
+<span class="k">if</span> score >= <span class="n">70</span>:
+    <span class="n">print</span>(<span class="s">f"{name}, тест сдан!"</span>)
+<span class="k">else</span>:
+    <span class="n">print</span>(<span class="s">"Ещё одна попытка"</span>)</pre>
+          <div class="ep-out">&gt;&gt;&gt; Алия, тест сдан!</div>
+          <span class="ep-tag">Easy Python</span>
+        </div>
+        <div class="stats ep-stats">
+          <div class="stat hl"><b>${o.pct}%</b><span>общий прогресс</span></div>
           <div class="stat"><b>${o.lessons}</b><span>уроков изучено</span></div>
           <div class="stat"><b>${o.tasks}</b><span>задач решено</span></div>
           <a class="stat" href="#practice" onclick="document.getElementById('practice').scrollIntoView({behavior:'smooth'});return false" style="text-decoration:none;color:inherit"><b>${o.extraSolved}/${o.extraTotal}</b><span>задач для отработки (обязательно) ↓</span></a>
@@ -641,9 +656,9 @@ def _pystart_exec(code, stdin, extra, echo):
       <div class="grid-mods" id="extraGrid"></div>
       <h2>Как устроен каждый модуль</h2>
       <div class="grid-mods">
-        <div class="card"><h3>1. Теория</h3><p class="muted small">Короткие уроки с примерами. Любой пример можно выполнить прямо на странице или отправить в песочницу.</p></div>
-        <div class="card"><h3>2. Практика</h3><p class="muted small">Основные задачи и обязательная отработка (20+ задач). Кнопка «Проверить» прогоняет решение через открытые и скрытые тесты.</p></div>
-        <div class="card"><h3>3. Тест</h3><p class="muted small">Вопросы в формате ЕНТ четырёх типов. После сдачи — баллы, процент и разбор каждой ошибки. Зачёт от ${QUIZ_PASS}%.</p></div>
+        <div class="card how-card"><h3>1. Теория</h3><p class="muted small">Короткие уроки с примерами. Любой пример можно выполнить прямо на странице или отправить в песочницу.</p></div>
+        <div class="card how-card"><h3>2. Практика</h3><p class="muted small">Основные задачи и обязательная отработка (20+ задач). Кнопка «Проверить» прогоняет решение через открытые и скрытые тесты.</p></div>
+        <div class="card how-card"><h3>3. Тест</h3><p class="muted small">Вопросы в формате ЕНТ четырёх типов. После сдачи — баллы, процент и разбор каждой ошибки. Зачёт от ${QUIZ_PASS}%.</p></div>
       </div>
       <p class="small muted" style="margin-top:24px">Прогресс хранится только в этом браузере. <a href="#" id="resetProgress">Сбросить прогресс</a></p>
     </div>`);
@@ -655,19 +670,21 @@ def _pystart_exec(code, stdin, extra, echo):
       grid.appendChild(h(`<a class="card mod-card ${isReady(m) ? "" : "soon"}" href="#/m/${m.id}">
         <div class="top"><span class="icon">${m.icon || "📘"}</span>
           ${isReady(m) ? (p.complete ? `<span class="badge ok">Пройден</span>` : `<span class="badge">${p.done}/${p.total}</span>`) : `<span class="badge">Скоро</span>`}</div>
-        <h3>Модуль ${i + 1}. ${esc(m.title)}</h3>
+        <span class="ep-label">Модуль ${i + 1}</span>
+        <h3>${esc(m.title)}</h3>
         <p>${esc(m.summary)}</p>
-        ${ex.count ? `<p class="small" style="color:var(--accent);font-weight:600">➕ ${ex.count} задач для отработки</p>` : ""}
+        ${ex.count ? `<p class="extra-note">+ ${ex.count} задач для отработки</p>` : ""}
         ${isReady(m) ? `<div class="bar ${p.complete ? "ok" : ""}"><span style="width:${p.pct}%"></span></div>` : ""}
       </a>`));
       if (ex.count) {
         const pct = Math.round((ex.solved / ex.count) * 100);
-        extraGrid.appendChild(h(`<a class="card mod-card" href="#/m/${m.id}/tasks/${ex.next}">
+        extraGrid.appendChild(h(`<a class="card mod-card ex-card" href="#/m/${m.id}/tasks/${ex.next}">
           <div class="top"><span class="icon">${m.icon || "📘"}</span><span class="badge ${ex.solved === ex.count ? "ok" : ""}">${ex.solved}/${ex.count}</span></div>
-          <h3>Модуль ${i + 1}. ${esc(m.title)}</h3>
-          <p>${ex.count} дополнительных задач с автопроверкой.</p>
-          <span class="btn btn-primary btn-sm" style="align-self:flex-start">${ex.solved ? "Продолжить" : "Начать"} отработку →</span>
-          <div class="bar ok"><span style="width:${pct}%"></span></div>
+          <span class="ep-label">Модуль ${i + 1}</span>
+          <h3>${esc(m.title)}</h3>
+          <p>${ex.count} задач с автопроверкой.</p>
+          <span class="btn btn-lime btn-sm" style="align-self:flex-start">${ex.solved ? "Продолжить" : "Начать"} отработку →</span>
+          <div class="bar"><span style="width:${pct}%"></span></div>
         </a>`));
       }
     });

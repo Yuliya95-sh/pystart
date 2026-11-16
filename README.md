@@ -1,4 +1,4 @@
-# PyStart — интерактивный курс Python для ЕНТ
+# Easy Python — интерактивный курс Python для ЕНТ
 
 Сайт работает полностью в браузере (без сервера): Python 3 запускается через **Pyodide** (WebAssembly), редактор — **CodeMirror 5**, прогресс хранится в `localStorage`.
 
