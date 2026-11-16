@@ -350,7 +350,12 @@ details.hint-box summary { cursor: pointer; font-weight: 600; color: var(--text-
 .q-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 8px; }
 .q-num { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
 .q-type { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); font-weight: 600; }
-.q-text { font-weight: 600; font-size: 15.5px; margin-bottom: 10px; }
+details.ctx-box { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; background: var(--surface-2); padding: 8px 14px; margin-bottom: 12px; }
+details.ctx-box > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-2); }
+details.ctx-box .ctx-body { margin-top: 8px; font-size: 14px; }
+details.ctx-box .ctx-body p { margin: 0 0 .6em; }
+details.ctx-box .codeblock { margin: 0; }
+.q-text {font-weight: 600; font-size: 15.5px; margin-bottom: 10px; }
 .q .codeblock { margin-bottom: 12px; }
 .opts { display: grid; gap: 8px; }
 .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: var(--surface); transition: border-color .12s, background .12s; }

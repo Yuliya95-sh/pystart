@@ -469,11 +469,17 @@ def _pystart_exec(code, stdin, extra, echo):
     return 0;
   }
 
-  function renderQuizQuestion(q, i, state, seed) {
+  // ctx — общий контекст (ситуация + код), к которому относится несколько вопросов (формат ЕНТ)
+  function renderQuizQuestion(q, i, state, seed, ctx, ctxOpen) {
     const card = h(`<div class="card q" data-i="${i}">
       <div class="q-head"><span class="q-num">Вопрос ${i + 1} · ${qMax(q)} ${qMax(q) === 1 ? "балл" : "балла"}</span><span class="q-type">${Q_TYPES[q.type]}</span></div>
-      <div class="q-text">${q.q}</div>
     </div>`);
+    if (ctx) {
+      const box = h(`<details class="ctx-box" ${ctxOpen ? "open" : ""}><summary>📄 Контекст: ${esc(ctx.title || "")}</summary><div class="ctx-body">${ctx.text || ""}</div></details>`);
+      if (ctx.code) { const cb = h(`<div class="codeblock"></div>`); cb.appendChild(highlight(ctx.code)); $(".ctx-body", box).appendChild(cb); }
+      card.appendChild(box);
+    }
+    card.appendChild(h(`<div class="q-text">${q.q}</div>`));
     if (q.code) { const cb = h(`<div class="codeblock"></div>`); cb.appendChild(highlight(q.code)); card.appendChild(cb); }
 
     if (q.type === "single" || q.type === "multiple") {
@@ -852,15 +858,28 @@ def _pystart_exec(code, stdin, extra, echo):
       <div class="v">${pct}%</div></div>`;
   }
 
-  function viewQuiz(m) {
+  // Модуль может иметь один тест (m.quiz) или несколько вариантов (m.quizzes = [{id, title, questions}]).
+  function viewQuiz(m, vn) {
     const el = h(`<div class="container"></div>`);
     el.appendChild(moduleHeader(m, "quiz"));
-    const maxScore = m.quiz.reduce((s, q) => s + qMax(q), 0);
-    const prev = Store.data.quiz[m.id];
+    let quiz = m.quiz, recKey = m.id, title = "Итоговый тест модуля";
+    if (m.quizzes) {
+      vn = Math.min(Math.max(0, vn | 0), m.quizzes.length - 1);
+      const v = m.quizzes[vn];
+      quiz = v.questions; recKey = `${m.id}:${v.id}`; title = `Вариант ${vn + 1}. ${v.title}`;
+      const nav = h(`<div class="lesson-nav"></div>`);
+      m.quizzes.forEach((x, k) => {
+        const r = Store.data.quiz[`${m.id}:${x.id}`];
+        nav.appendChild(h(`<a class="lesson-pill ${k === vn ? "active" : ""}" href="#/m/${m.id}/quiz/${k}"><span class="check ${r && r.passed ? "on" : ""}"></span>Вариант ${k + 1}${r ? ` · ${r.best}%` : ""}</a>`));
+      });
+      el.appendChild(nav);
+    }
+    const maxScore = quiz.reduce((s, q) => s + qMax(q), 0);
+    const prev = Store.data.quiz[recKey];
     const intro = h(`<div class="card" style="margin-bottom:16px"><div class="quiz-intro">
-      <div style="flex:1;min-width:240px"><h2 style="margin-top:0">Итоговый тест модуля</h2>
-      <p class="muted" style="margin:0">${m.quiz.length} вопросов · максимум ${maxScore} баллов · зачёт от ${QUIZ_PASS}%.<br>
-      Типы вопросов: один ответ, несколько ответов, соответствие, ввод ответа.</p></div>
+      <div style="flex:1;min-width:240px"><h2 style="margin-top:0">${esc(title)}</h2>
+      <p class="muted" style="margin:0">${quiz.length} вопросов · максимум ${maxScore} баллов · зачёт от ${QUIZ_PASS}%.<br>
+      ${m.quizzes ? "Вопросы опираются на общий контекст — ситуацию и программу, как в ЕНТ. Модуль зачтён, если сдан хотя бы один вариант." : "Типы вопросов: один ответ, несколько ответов, соответствие, ввод ответа."}</p></div>
       ${prev ? `<div><div class="small muted">Лучший результат</div><b style="font-size:24px">${prev.best}%</b> ${prev.passed ? '<span class="badge ok">зачёт</span>' : ""}<div class="small muted">попыток: ${prev.attempts}</div></div>` : ""}
     </div></div>`);
     el.appendChild(intro);
@@ -868,7 +887,12 @@ def _pystart_exec(code, stdin, extra, echo):
     const state = {};
     const seed = Date.now() % 1000 + 1;
     const qBox = h(`<div></div>`);
-    m.quiz.forEach((q, i) => qBox.appendChild(renderQuizQuestion(q, i, state, seed)));
+    let lastCtx = null;
+    quiz.forEach((q, i) => {
+      const ctx = q.ctx && m.contexts ? m.contexts[q.ctx] : null;
+      qBox.appendChild(renderQuizQuestion(q, i, state, seed, ctx, q.ctx !== lastCtx));
+      lastCtx = q.ctx;
+    });
     el.appendChild(qBox);
 
     const bar = h(`<div class="card quiz-sticky"><span class="small muted">Ответьте на вопросы и нажмите «Завершить тест».</span>
@@ -876,7 +900,7 @@ def _pystart_exec(code, stdin, extra, echo):
     el.appendChild(bar);
 
     $("button", bar).onclick = () => {
-      const unanswered = m.quiz.filter((q, i) => {
+      const unanswered = quiz.filter((q, i) => {
         const a = state[i];
         if (q.type === "matching") return !a || Object.values(a).filter(Boolean).length < q.pairs.length;
         if (q.type === "multiple") return !a || !a.length;
@@ -887,15 +911,19 @@ def _pystart_exec(code, stdin, extra, echo):
       let score = 0;
       const wrong = [];
       $$(".q", qBox).forEach((card, i) => {
-        const got = showQuizReview(card, m.quiz[i], state[i]);
+        const got = showQuizReview(card, quiz[i], state[i]);
         score += got;
-        if (got < qMax(m.quiz[i])) wrong.push(i + 1);
+        if (got < qMax(quiz[i])) wrong.push(i + 1);
       });
       const pct = Math.round((score / maxScore) * 100);
       const passed = pct >= QUIZ_PASS;
-      const rec = Store.data.quiz[m.id] || { best: 0, attempts: 0, passed: false };
-      rec.attempts++; rec.last = pct; rec.best = Math.max(rec.best, pct); rec.passed = rec.passed || passed;
-      Store.data.quiz[m.id] = rec; Store.save();
+      const keys = recKey === m.id ? [m.id] : [recKey, m.id];   // для вариантов храним и общий итог модуля
+      keys.forEach((key) => {
+        const rec = Store.data.quiz[key] || { best: 0, attempts: 0, passed: false };
+        rec.attempts++; rec.last = pct; rec.best = Math.max(rec.best, pct); rec.passed = rec.passed || passed;
+        Store.data.quiz[key] = rec;
+      });
+      Store.save();
       renderSidebar();
 
       const res = h(`<div class="card" style="margin-bottom:16px">
@@ -990,7 +1018,7 @@ def _pystart_exec(code, stdin, extra, echo):
       if (!m) view = viewHome();
       else if (!isReady(m)) view = viewSoon(m);
       else if (r.tab === "tasks") view = viewTasks(m, r.n);
-      else if (r.tab === "quiz") view = viewQuiz(m);
+      else if (r.tab === "quiz") view = viewQuiz(m, r.n);
       else view = viewTheory(m, r.n);
     } else view = viewHome();
     const root = app();
@@ -1013,7 +1041,8 @@ def _pystart_exec(code, stdin, extra, echo):
         const bad = res.filter((r) => !r.pass);
         report.push(`${m.id}.${t.id}: ${res.length - bad.length}/${res.length}` + (bad.length ? " ✗ " + bad.map((b) => `#${b.index + 1} got=${JSON.stringify(b.res.out + b.res.err)} exp=${JSON.stringify(b.test.output)}`).join(" | ") : " ✓"));
       }
-      m.quiz.forEach((q, i) => {
+      (m.quiz || m.quizzes.flatMap((v) => v.questions)).forEach((q, i) => {
+        if (q.ctx && !(m.contexts || {})[q.ctx]) report.push(`${m.id} quiz#${i + 1}: нет контекста ${q.ctx}`);
         if (q.type === "single" && !(q.answer >= 0 && q.answer < q.options.length)) report.push(`${m.id} quiz#${i + 1}: answer вне диапазона`);
         if (q.type === "multiple" && q.answer.some((a) => a >= q.options.length)) report.push(`${m.id} quiz#${i + 1}: answer вне диапазона`);
       });
