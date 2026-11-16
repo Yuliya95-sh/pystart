@@ -727,9 +727,16 @@ def _pystart_exec(code, stdin, extra, echo):
     const list = h(`<div class="task-list"></div>`);
     const extraList = h(`<div class="task-list"></div>`);
     let mainNo = 0, extraNo = 0;
+    const lastSection = { main: null, extra: null };
     m.tasks.forEach((t, k) => {
       const solved = Store.data.tasks[`${m.id}.${t.id}`];
       const label = t.extra ? `Доп. ${++extraNo}` : `Задача ${++mainNo}`;
+      const kind = t.extra ? "extra" : "main";
+      // необязательное поле section: задачи группируются под заголовками разделов
+      if (t.section && t.section !== lastSection[kind]) {
+        (t.extra ? extraList : list).appendChild(h(`<div class="task-section">${esc(t.section)}</div>`));
+        lastSection[kind] = t.section;
+      }
       (t.extra ? extraList : list).appendChild(h(`<a class="task-item ${k === n ? "active" : ""}" href="#/m/${m.id}/tasks/${k}">
         <span class="check ${solved ? "on" : ""}"></span><span class="t-title">${label}. ${esc(t.title)}</span>
         <span class="level ${LEVEL_CLASS[t.level] || "l1"}">${esc(t.level)}</span></a>`));
