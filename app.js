@@ -66,12 +66,14 @@
   function moduleProgress(m) {
     if (!isReady(m)) return { done: 0, total: 0, pct: 0, complete: false };
     const L = m.lessons.filter((l) => Store.data.lessons[`${m.id}.${l.id}`]).length;
-    const T = m.tasks.filter((t) => Store.data.tasks[`${m.id}.${t.id}`]).length;
+    const main = m.tasks.filter((t) => !t.extra);
+    const T = main.filter((t) => Store.data.tasks[`${m.id}.${t.id}`]).length;
+    const X = m.tasks.filter((t) => t.extra && Store.data.tasks[`${m.id}.${t.id}`]).length;
     const q = Store.data.quiz[m.id];
     const Q = q && q.passed ? 1 : 0;
-    const total = m.lessons.length + m.tasks.length + 1;
+    const total = m.lessons.length + main.length + 1;
     const done = L + T + Q;
-    return { L, T, Q, done, total, pct: Math.round((done / total) * 100), complete: done === total, quiz: q };
+    return { L, T, Q, X, mainTotal: main.length, done, total, pct: Math.round((done / total) * 100), complete: done === total, quiz: q };
   }
 
   function overallProgress() {
@@ -399,18 +401,32 @@ def _pystart_exec(code, stdin, extra, echo):
     return String(s ?? "").replace(/\r/g, "").split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\n+$/, "");
   }
 
+  // Если у теста не указан output, ожидаемый вывод вычисляется запуском эталонного решения
+  // (результат кэшируется). Так автору достаточно написать входные данные и solution.
+  const expectedCache = new WeakMap();
+  function expectedFor(task, t) {
+    if (t.output !== undefined || t.assert || !task.solution) return Promise.resolve(t.output);
+    if (!expectedCache.has(t)) {
+      expectedCache.set(t, Py.run(task.solution, { stdin: t.input || "", files: t.files, echo: false, timeout: 15000 })
+        .then((r) => (r.status === "ok" ? r.out : null)));
+    }
+    return expectedCache.get(t);
+  }
+
   async function gradeTask(task, code, onStep) {
     const results = [];
     for (let i = 0; i < task.tests.length; i++) {
       const t = task.tests[i];
+      const expected = await expectedFor(task, t);
       const res = await Py.run(code, { stdin: t.input || "", extra: t.assert || "", echo: false, timeout: t.timeout || TEST_TIMEOUT, files: t.files });
       let pass, reason = "";
-      if (res.status === "timeout") { pass = false; reason = "Превышено время (бесконечный цикл?)"; }
+      if (expected === null) { pass = false; reason = "Ошибка в эталонном решении задачи"; }
+      else if (res.status === "timeout") { pass = false; reason = "Превышено время (бесконечный цикл?)"; }
       else if (res.status === "error") { pass = false; reason = `Ошибка выполнения: ${res.etype}`; }
       else if (res.status === "assert") { pass = false; reason = "Функция вернула неверный результат"; }
       else if (t.assert && t.output === undefined) { pass = true; }
-      else { pass = normOut(res.out) === normOut(t.output); if (!pass) reason = "Неверный ответ"; }
-      const r = { test: t, res, pass, reason, index: i };
+      else { pass = normOut(res.out) === normOut(expected); if (!pass) reason = "Неверный ответ"; }
+      const r = { test: t, res, pass, reason, index: i, expected };
       results.push(r);
       onStep && onStep(r);
     }
@@ -630,7 +646,7 @@ def _pystart_exec(code, stdin, extra, echo):
     for (const m of COURSE.modules.filter(isReady)) {
       const li = m.lessons.findIndex((l) => !Store.data.lessons[`${m.id}.${l.id}`]);
       if (li >= 0) return { href: `#/m/${m.id}/theory/${li}`, label: m.lessons[li].title };
-      const ti = m.tasks.findIndex((t) => !Store.data.tasks[`${m.id}.${t.id}`]);
+      const ti = m.tasks.findIndex((t) => !t.extra && !Store.data.tasks[`${m.id}.${t.id}`]);
       if (ti >= 0) return { href: `#/m/${m.id}/tasks/${ti}`, label: m.tasks[ti].title };
       if (!(Store.data.quiz[m.id] || {}).passed) return { href: `#/m/${m.id}/quiz`, label: `Тест: ${m.title}` };
     }
@@ -647,7 +663,7 @@ def _pystart_exec(code, stdin, extra, echo):
         <div style="min-width:200px"><div class="small muted" style="margin-bottom:4px">Прогресс модуля: <b>${p.pct}%</b></div><div class="bar ${p.complete ? "ok" : ""}"><span style="width:${p.pct}%"></span></div></div></div>
       <nav class="tabs">
         <a class="tab ${tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0">📖 Теория <span class="count">${p.L}/${m.lessons.length}</span></a>
-        <a class="tab ${tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0">💻 Практика <span class="count">${p.T}/${m.tasks.length}</span></a>
+        <a class="tab ${tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0">💻 Практика <span class="count">${p.T}/${p.mainTotal}</span></a>
         <a class="tab ${tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz">📝 Тест ${q ? `<span class="count">${q.best}%</span>` : ""}</a>
       </nav></div>`);
   }
@@ -702,21 +718,38 @@ def _pystart_exec(code, stdin, extra, echo):
     el.appendChild(moduleHeader(m, "tasks"));
 
     const list = h(`<div class="task-list"></div>`);
+    const extraList = h(`<div class="task-list"></div>`);
+    let mainNo = 0, extraNo = 0;
     m.tasks.forEach((t, k) => {
       const solved = Store.data.tasks[`${m.id}.${t.id}`];
-      list.appendChild(h(`<a class="task-item ${k === n ? "active" : ""}" href="#/m/${m.id}/tasks/${k}">
-        <span class="check ${solved ? "on" : ""}"></span><span class="t-title">Задача ${k + 1}. ${esc(t.title)}</span>
+      const label = t.extra ? `Доп. ${++extraNo}` : `Задача ${++mainNo}`;
+      (t.extra ? extraList : list).appendChild(h(`<a class="task-item ${k === n ? "active" : ""}" href="#/m/${m.id}/tasks/${k}">
+        <span class="check ${solved ? "on" : ""}"></span><span class="t-title">${label}. ${esc(t.title)}</span>
         <span class="level ${LEVEL_CLASS[t.level] || "l1"}">${esc(t.level)}</span></a>`));
     });
     el.appendChild(list);
+    if (extraNo) {
+      const p = moduleProgress(m);
+      const det = h(`<details class="extra-tasks" ${task.extra ? "open" : ""}><summary>➕ Дополнительные задачи для отработки <span class="count">${p.X}/${extraNo}</span>
+        <span class="small muted">— не обязательны для зачёта модуля</span></summary></details>`);
+      det.appendChild(extraList);
+      el.appendChild(det);
+    }
 
     const card = h(`<div class="card"><h2 style="margin-top:0">${esc(task.title)}</h2><div class="statement">${task.statement}</div></div>`);
     const examples = task.tests.filter((t) => !t.hidden && (t.input !== undefined || t.files));
     if (examples.length) {
       const ex = h(`<div><h3>Примеры</h3><div class="examples"></div></div>`);
       examples.slice(0, 3).forEach((t) => {
-        $(".examples", ex).appendChild(h(`<div class="example"><div class="ex-row"><div class="ex-h">Ввод</div><div class="ex-h">Вывод</div></div>
-          <div class="ex-row"><div><pre>${esc(fmtInput(t))}</pre></div><div><pre>${esc(t.output)}</pre></div></div></div>`));
+        const exEl = h(`<div class="example"><div class="ex-row"><div class="ex-h">Ввод</div><div class="ex-h">Вывод</div></div>
+          <div class="ex-row"><div><pre>${esc(fmtInput(t))}</pre></div><div><pre class="ex-out"></pre></div></div></div>`);
+        const outEl = $(".ex-out", exEl);
+        if (t.output !== undefined) outEl.textContent = t.output;
+        else {
+          outEl.textContent = "вычисляется…";
+          expectedFor(task, t).then((o) => { outEl.textContent = o === null ? "(ошибка эталона)" : o.replace(/\n+$/, ""); });
+        }
+        $(".examples", ex).appendChild(exEl);
       });
       card.appendChild(ex);
     }
@@ -776,7 +809,7 @@ def _pystart_exec(code, stdin, extra, echo):
         const shown = (s) => `<pre>${esc(s)}</pre>`;
         tbody.appendChild(h(`<tr><td>${r.index + 1}${hidden ? " 🔒" : ""}</td>
           <td>${hidden ? '<span class="t-wait">скрытый тест</span>' : shown(t.label || t.assert || fmtInput(t))}</td>
-          <td>${hidden ? "—" : shown(t.output ?? t.expect ?? "без ошибок")}</td>
+          <td>${hidden ? "—" : shown(r.expected ?? t.expect ?? "без ошибок")}</td>
           <td>${hidden && r.pass ? "—" : hidden ? '<span class="t-wait">скрыто</span>' : shown(got.trim() || "(пусто)")}</td>
           <td class="${r.pass ? "t-ok" : "t-bad"}">${r.pass ? "✓ пройден" : "✗ " + esc(r.reason)}</td></tr>`));
       });
@@ -804,7 +837,8 @@ def _pystart_exec(code, stdin, extra, echo):
     };
 
     el.appendChild(card);
-    if (n < m.tasks.length - 1) el.appendChild(h(`<div class="lesson-foot" style="border:0"><span></span><a class="btn btn-ghost" href="#/m/${m.id}/tasks/${n + 1}">Следующая задача →</a></div>`));
+    const nextIdx = m.tasks.findIndex((t, k) => k > n && !!t.extra === !!task.extra);
+    if (nextIdx >= 0) el.appendChild(h(`<div class="lesson-foot" style="border:0"><span></span><a class="btn btn-ghost" href="#/m/${m.id}/tasks/${nextIdx}">Следующая задача →</a></div>`));
     else el.appendChild(h(`<div class="lesson-foot" style="border:0"><span></span><a class="btn btn-primary" href="#/m/${m.id}/quiz">Перейти к тесту →</a></div>`));
     return el;
   }
@@ -928,9 +962,9 @@ def _pystart_exec(code, stdin, extra, echo):
         </a></div>`);
       if (ready && active) {
         const items = h(`<div class="mod-items"></div>`);
-        const lessonsDone = p.L === m.lessons.length, tasksDone = p.T === m.tasks.length;
+        const lessonsDone = p.L === m.lessons.length, tasksDone = p.T === p.mainTotal;
         items.appendChild(h(`<a class="${route.tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0"><span class="check ${lessonsDone ? "on" : ""}"></span>Теория (${p.L}/${m.lessons.length})</a>`));
-        items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${m.tasks.length})</a>`));
+        items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${p.mainTotal}${p.X ? ` + ${p.X} доп.` : ""})</a>`));
         items.appendChild(h(`<a class="${route.tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz"><span class="check ${p.Q ? "on" : ""}"></span>Тест${p.quiz ? ` (${p.quiz.best}%)` : ""}</a>`));
         node.appendChild(items);
       }

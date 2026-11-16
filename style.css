@@ -313,6 +313,10 @@ th { background: var(--surface-2); font-weight: 600; }
 .task-item:hover { border-color: var(--accent); }
 .task-item.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .task-item .t-title { font-weight: 600; flex: 1; }
+details.extra-tasks { margin: -8px 0 22px; border: 1px dashed var(--border); border-radius: 12px; padding: 10px 14px; background: var(--surface); }
+details.extra-tasks > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+details.extra-tasks > summary .count { font-size: 11.5px; background: var(--surface-2); color: var(--text-2); padding: 1px 7px; border-radius: 99px; margin: 0 4px; }
+details.extra-tasks .task-list { margin: 10px 0 2px; }
 .level { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
 .level.l1 { background: var(--ok-soft); color: var(--ok); }
 .level.l2 { background: var(--warn-soft); color: var(--warn); }
