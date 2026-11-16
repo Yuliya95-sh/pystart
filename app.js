@@ -660,7 +660,7 @@ score = <span class="n">int</span>(<span class="n">input</span>())
         <div class="card how-card"><h3>2. Практика</h3><p class="muted small">Основные задачи и обязательная отработка (20+ задач). Кнопка «Проверить» прогоняет решение через открытые и скрытые тесты.</p></div>
         <div class="card how-card"><h3>3. Тест</h3><p class="muted small">Вопросы в формате ЕНТ четырёх типов. После сдачи — баллы, процент и разбор каждой ошибки. Зачёт от ${QUIZ_PASS}%.</p></div>
       </div>
-      <p class="small muted" style="margin-top:24px">Прогресс хранится только в этом браузере. <a href="#" id="resetProgress">Сбросить прогресс</a></p>
+      <p class="small muted" style="margin-top:24px">${window.EPTrack && EPTrack.enabled() ? "Прогресс хранится в этом браузере и в журнале учителя." : "Прогресс хранится только в этом браузере."} <a href="#" id="resetProgress">Сбросить прогресс</a> · <a href="#/teacher">👩‍🏫 Для учителя</a></p>
     </div>`);
     const grid = $("#modGrid", el);
     const extraGrid = $("#extraGrid", el);
@@ -755,7 +755,9 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       ${n > 0 ? `<a class="btn btn-ghost" href="#/m/${m.id}/theory/${n - 1}">← Назад</a>` : "<span></span>"}
       <button class="btn btn-ok">${Store.data.lessons[key] ? "✓ Изучено — " : "Я изучил(а) урок — "}${last ? "к практике →" : "дальше →"}</button></div>`);
     $("button", foot).onclick = () => {
+      const firstTime = !Store.data.lessons[key];
       Store.data.lessons[key] = true; Store.save();
+      if (firstTime && window.EPTrack) EPTrack.log({ type: "lesson", module: m.id, item: lesson.id, title: lesson.title });
       location.hash = last ? (m.tasks.length ? `#/m/${m.id}/tasks/0` : `#/m/${m.id}/quiz`) : `#/m/${m.id}/theory/${n + 1}`;
     };
     art.appendChild(foot);
@@ -895,6 +897,11 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       });
       const passed = results.filter((r) => r.pass).length;
       const all = passed === results.length;
+      if (window.EPTrack) {
+        const fb = results.find((r) => !r.pass);
+        EPTrack.log({ type: "check", module: m.id, item: task.id, title: (task.extra ? "Отработка: " : "") + task.title, ok: all,
+          score: `${passed}/${results.length}`, detail: fb ? `Тест №${fb.index + 1}${fb.test.hidden ? " (скрытый)" : ""}: ${fb.reason}` : "", code });
+      }
       box.className = "verdict " + (all ? "ok" : "bad");
       if (all) {
         $(".verdict-head", box).innerHTML = `🎉 Решение принято! Пройдено тестов: ${passed} из ${results.length}`;
@@ -998,6 +1005,8 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       });
       Store.save();
       renderSidebar();
+      if (window.EPTrack) EPTrack.log({ type: "quiz", module: m.id, item: recKey, title, ok: passed, score: pct,
+        detail: `Баллы ${score} из ${maxScore}` + (wrong.length ? `; ошибки в вопросах: ${wrong.join(", ")}` : "; без ошибок") });
 
       const res = h(`<div class="card" style="margin-bottom:16px">
         <div class="score-card">${scoreRing(pct)}
@@ -1051,6 +1060,11 @@ score = <span class="n">int</span>(<span class="n">input</span>())
     sb.appendChild(h(`<div class="side-overall"><div class="row"><span>Прогресс курса</span><b>${o.pct}%</b></div><div class="bar"><span style="width:${o.pct}%"></span></div></div>`));
     sb.appendChild(h(`<a class="side-link ${route.view === "home" ? "active" : ""}" href="#/">🏠 Главная</a>`));
     sb.appendChild(h(`<a class="side-link ${route.view === "sandbox" ? "active" : ""}" href="#/sandbox">🧪 Песочница</a>`));
+    if (window.EPTrack && EPTrack.badge()) {
+      const me = h(EPTrack.badge());
+      $('[data-ep="logout"]', me).onclick = (e) => { e.preventDefault(); EPTrack.logout(); };
+      sb.insertBefore(me, sb.firstChild);
+    }
     sb.appendChild(h(`<div class="side-title">Модули</div>`));
     COURSE.modules.forEach((m, i) => {
       const p = moduleProgress(m);
@@ -1080,6 +1094,7 @@ score = <span class="n">int</span>(<span class="n">input</span>())
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return { view: "home" };
     if (parts[0] === "sandbox") return { view: "sandbox" };
+    if (parts[0] === "teacher") return { view: "teacher", sid: parts[1] || "" };
     if (parts[0] === "m") return { view: "module", mid: parts[1], tab: parts[2] || "theory", n: parseInt(parts[3] || "0", 10) || 0 };
     return { view: "home" };
   }
@@ -1088,6 +1103,7 @@ score = <span class="n">int</span>(<span class="n">input</span>())
     const r = parseRoute();
     let view;
     if (r.view === "sandbox") view = viewSandbox();
+    else if (r.view === "teacher") view = window.EPTeacher ? EPTeacher.view(COURSE) : viewHome();
     else if (r.view === "module") {
       const m = getModule(r.mid);
       if (!m) view = viewHome();
@@ -1100,6 +1116,15 @@ score = <span class="n">int</span>(<span class="n">input</span>())
     root.innerHTML = "";
     root.appendChild(view);
     renderSidebar();
+    if (window.EPTrack && r.view !== "teacher") {
+      const m = r.mid && getModule(r.mid);
+      let title = r.view === "sandbox" ? "Песочница" : r.view === "home" ? "Главная" : "";
+      if (m) {
+        const it = r.tab === "tasks" ? m.tasks[r.n] : r.tab === "quiz" ? null : m.lessons[r.n];
+        title = (r.tab === "tasks" ? "Задача: " : r.tab === "quiz" ? "Тест" : "Урок: ") + (it ? it.title : "");
+      }
+      EPTrack.open(r, title);
+    }
     document.body.classList.remove("menu-open");
     window.scrollTo(0, 0);
     // CodeMirror нужно обновить после вставки в DOM
@@ -1136,6 +1161,21 @@ score = <span class="n">int</span>(<span class="n">input</span>())
     $("#menuBtn").onclick = () => document.body.classList.toggle("menu-open");
     $("#backdrop").onclick = () => document.body.classList.remove("menu-open");
     window.addEventListener("hashchange", render);
+    if (window.EPTrack) {
+      EPTrack.init({
+        snapshot: () => {
+          const o = overallProgress();
+          const mods = {};
+          COURSE.modules.filter(isReady).forEach((m) => { mods[m.id] = moduleProgress(m).pct; });
+          return { pct: o.pct, lessons: o.lessons, tasks: o.tasks, extra: o.extraSolved, quizzes: o.quizzes, mods };
+        },
+        // прогресс без кода решений — для восстановления на другом устройстве
+        progress: () => ({ lessons: Store.data.lessons, tasks: Store.data.tasks, quiz: Store.data.quiz, fails: Store.data.fails }),
+        onRestore: (p) => { Object.assign(Store.data, { lessons: p.lessons || {}, tasks: p.tasks || {}, quiz: p.quiz || {}, fails: p.fails || {} }); Store.save(); render(); toast("Прогресс восстановлен"); },
+        onLogout: () => { Store.reset(); try { localStorage.setItem(STORE_KEY, JSON.stringify(Store.data)); } catch (e) {} render(); },
+        onLogin: () => render(),
+      });
+    }
     render();
     Py.init();
     window.PyStart = { Py, Store, selfTest, gradeTask, COURSE };
