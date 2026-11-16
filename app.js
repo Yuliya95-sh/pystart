@@ -486,7 +486,7 @@ def _pystart_exec(code, stdin, extra, echo):
       const box = h(`<div class="opts"></div>`);
       q.options.forEach((o, k) => {
         const isCode = q.codeOptions;
-        const lab = h(`<label class="opt"><input type="${q.type === "single" ? "radio" : "checkbox"}" name="q${i}" value="${k}"><div>${isCode ? `<pre>${esc(o)}</pre>` : o}</div></label>`);
+        const lab = h(`<label class="opt"><input type="${q.type === "single" ? "radio" : "checkbox"}" name="q${i}" value="${k}"><b class="opt-letter">${"АБВГДЕ"[k] || k + 1})</b><div>${isCode ? `<pre>${esc(o)}</pre>` : o}</div></label>`);
         const inp = $("input", lab);
         inp.onchange = () => {
           if (q.type === "single") { state[i] = k; $$(".opt", box).forEach((x) => x.classList.remove("selected")); }
@@ -670,7 +670,7 @@ def _pystart_exec(code, stdin, extra, echo):
         <div style="min-width:200px"><div class="small muted" style="margin-bottom:4px">Прогресс модуля: <b>${p.pct}%</b></div><div class="bar ${p.complete ? "ok" : ""}"><span style="width:${p.pct}%"></span></div></div></div>
       <nav class="tabs">
         <a class="tab ${tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0">📖 Теория <span class="count">${p.L}/${m.lessons.length}</span></a>
-        <a class="tab ${tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0">💻 Практика <span class="count">${p.T}/${p.mainTotal}</span></a>
+        ${m.tasks.length ? `<a class="tab ${tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0">💻 Практика <span class="count">${p.T}/${p.mainTotal}</span></a>` : ""}
         <a class="tab ${tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz">📝 Тест ${q ? `<span class="count">${q.best}%</span>` : ""}</a>
       </nav></div>`);
   }
@@ -708,7 +708,7 @@ def _pystart_exec(code, stdin, extra, echo):
       <button class="btn btn-ok">${Store.data.lessons[key] ? "✓ Изучено — " : "Я изучил(а) урок — "}${last ? "к практике →" : "дальше →"}</button></div>`);
     $("button", foot).onclick = () => {
       Store.data.lessons[key] = true; Store.save();
-      location.hash = last ? `#/m/${m.id}/tasks/0` : `#/m/${m.id}/theory/${n + 1}`;
+      location.hash = last ? (m.tasks.length ? `#/m/${m.id}/tasks/0` : `#/m/${m.id}/quiz`) : `#/m/${m.id}/theory/${n + 1}`;
     };
     art.appendChild(foot);
     el.appendChild(art);
@@ -993,7 +993,7 @@ def _pystart_exec(code, stdin, extra, echo):
         const items = h(`<div class="mod-items"></div>`);
         const lessonsDone = p.L === m.lessons.length, tasksDone = p.T === p.mainTotal;
         items.appendChild(h(`<a class="${route.tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0"><span class="check ${lessonsDone ? "on" : ""}"></span>Теория (${p.L}/${m.lessons.length})</a>`));
-        items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${p.mainTotal}${p.X ? ` + ${p.X} доп.` : ""})</a>`));
+        if (m.tasks.length) items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${p.mainTotal}${p.X ? ` + ${p.X} доп.` : ""})</a>`));
         items.appendChild(h(`<a class="${route.tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz"><span class="check ${p.Q ? "on" : ""}"></span>Тест${p.quiz ? ` (${p.quiz.best}%)` : ""}</a>`));
         node.appendChild(items);
       }
@@ -1017,7 +1017,7 @@ def _pystart_exec(code, stdin, extra, echo):
       const m = getModule(r.mid);
       if (!m) view = viewHome();
       else if (!isReady(m)) view = viewSoon(m);
-      else if (r.tab === "tasks") view = viewTasks(m, r.n);
+      else if (r.tab === "tasks" && m.tasks.length) view = viewTasks(m, r.n);
       else if (r.tab === "quiz") view = viewQuiz(m, r.n);
       else view = viewTheory(m, r.n);
     } else view = viewHome();
