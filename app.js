@@ -77,12 +77,22 @@
   }
 
   function overallProgress() {
-    let done = 0, total = 0, lessons = 0, tasks = 0, quizzes = 0;
+    let done = 0, total = 0, lessons = 0, tasks = 0, quizzes = 0, extraSolved = 0, extraTotal = 0;
     COURSE.modules.filter(isReady).forEach((m) => {
       const p = moduleProgress(m);
       done += p.done; total += p.total; lessons += p.L; tasks += p.T; quizzes += p.Q;
+      const ex = extraInfo(m);
+      extraSolved += ex.solved; extraTotal += ex.count;
     });
-    return { done, total, lessons, tasks, quizzes, pct: total ? Math.round((done / total) * 100) : 0 };
+    return { done, total, lessons, tasks, quizzes, extraSolved, extraTotal, pct: total ? Math.round((done / total) * 100) : 0 };
+  }
+
+  // Дополнительные задачи модуля: сколько всего, сколько решено, индекс первой нерешённой
+  function extraInfo(m) {
+    const idx = m.tasks.map((t, k) => (t.extra ? k : -1)).filter((k) => k >= 0);
+    const solvedIdx = idx.filter((k) => Store.data.tasks[`${m.id}.${m.tasks[k].id}`]);
+    const next = idx.find((k) => !Store.data.tasks[`${m.id}.${m.tasks[k].id}`]);
+    return { count: idx.length, solved: solvedIdx.length, first: idx[0], next: next ?? idx[0] };
   }
 
   /* ========== 3. Python-движок ========== */
@@ -618,11 +628,15 @@ def _pystart_exec(code, stdin, extra, echo):
           <div class="stat"><b>${o.pct}%</b><span>общий прогресс</span></div>
           <div class="stat"><b>${o.lessons}</b><span>уроков изучено</span></div>
           <div class="stat"><b>${o.tasks}</b><span>задач решено</span></div>
+          <a class="stat" href="#practice" onclick="document.getElementById('practice').scrollIntoView({behavior:'smooth'});return false" style="text-decoration:none;color:inherit"><b>${o.extraSolved}/${o.extraTotal}</b><span>доп. задач для отработки ↓</span></a>
           <div class="stat"><b>${o.quizzes}</b><span>тестов сдано</span></div>
         </div>
       </section>
       <h2>Программа курса</h2>
-      <div class="grid-mods"></div>
+      <div class="grid-mods" id="modGrid"></div>
+      <h2 id="practice">➕ Отработка: дополнительные задачи</h2>
+      <p class="muted">В каждом модуле — 20 и больше задач для тренировки сверх основных. Они не обязательны для зачёта модуля, но лучше всего готовят к экзамену.</p>
+      <div class="grid-mods" id="extraGrid"></div>
       <h2>Как устроен каждый модуль</h2>
       <div class="grid-mods">
         <div class="card"><h3>1. Теория</h3><p class="muted small">Короткие уроки с примерами. Любой пример можно выполнить прямо на странице или отправить в песочницу.</p></div>
@@ -631,16 +645,29 @@ def _pystart_exec(code, stdin, extra, echo):
       </div>
       <p class="small muted" style="margin-top:24px">Прогресс хранится только в этом браузере. <a href="#" id="resetProgress">Сбросить прогресс</a></p>
     </div>`);
-    const grid = $(".grid-mods", el);
+    const grid = $("#modGrid", el);
+    const extraGrid = $("#extraGrid", el);
     COURSE.modules.forEach((m, i) => {
       const p = moduleProgress(m);
+      const ex = extraInfo(m);
       grid.appendChild(h(`<a class="card mod-card ${isReady(m) ? "" : "soon"}" href="#/m/${m.id}">
         <div class="top"><span class="icon">${m.icon || "📘"}</span>
           ${isReady(m) ? (p.complete ? `<span class="badge ok">Пройден</span>` : `<span class="badge">${p.done}/${p.total}</span>`) : `<span class="badge">Скоро</span>`}</div>
         <h3>Модуль ${i + 1}. ${esc(m.title)}</h3>
         <p>${esc(m.summary)}</p>
+        ${ex.count ? `<p class="small" style="color:var(--accent);font-weight:600">➕ ${ex.count} задач для отработки</p>` : ""}
         ${isReady(m) ? `<div class="bar ${p.complete ? "ok" : ""}"><span style="width:${p.pct}%"></span></div>` : ""}
       </a>`));
+      if (ex.count) {
+        const pct = Math.round((ex.solved / ex.count) * 100);
+        extraGrid.appendChild(h(`<a class="card mod-card" href="#/m/${m.id}/tasks/${ex.next}">
+          <div class="top"><span class="icon">${m.icon || "📘"}</span><span class="badge ${ex.solved === ex.count ? "ok" : ""}">${ex.solved}/${ex.count}</span></div>
+          <h3>Модуль ${i + 1}. ${esc(m.title)}</h3>
+          <p>${ex.count} дополнительных задач с автопроверкой.</p>
+          <span class="btn btn-primary btn-sm" style="align-self:flex-start">${ex.solved ? "Продолжить" : "Начать"} отработку →</span>
+          <div class="bar ok"><span style="width:${pct}%"></span></div>
+        </a>`));
+      }
     });
     $("#resetProgress", el).onclick = (e) => {
       e.preventDefault();
@@ -664,6 +691,7 @@ def _pystart_exec(code, stdin, extra, echo):
     const idx = COURSE.modules.indexOf(m) + 1;
     const p = moduleProgress(m);
     const q = p.quiz;
+    const ex = extraInfo(m);
     return h(`<div>
       <div class="crumbs"><a href="#/">Курс</a> / Модуль ${idx}</div>
       <div class="page-head"><h1>${m.icon || ""} ${esc(m.title)}</h1>
@@ -671,6 +699,7 @@ def _pystart_exec(code, stdin, extra, echo):
       <nav class="tabs">
         <a class="tab ${tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0">📖 Теория <span class="count">${p.L}/${m.lessons.length}</span></a>
         ${m.tasks.length ? `<a class="tab ${tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0">💻 Практика <span class="count">${p.T}/${p.mainTotal}</span></a>` : ""}
+        ${ex.count ? `<a class="tab ${tab === "extra" ? "active" : ""}" href="#/m/${m.id}/tasks/${ex.next}">➕ Отработка <span class="count">${ex.solved}/${ex.count}</span></a>` : ""}
         <a class="tab ${tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz">📝 Тест ${q ? `<span class="count">${q.best}%</span>` : ""}</a>
       </nav></div>`);
   }
@@ -722,7 +751,7 @@ def _pystart_exec(code, stdin, extra, echo):
     const task = m.tasks[n];
     const key = `${m.id}.${task.id}`;
     const el = h(`<div class="container"></div>`);
-    el.appendChild(moduleHeader(m, "tasks"));
+    el.appendChild(moduleHeader(m, task.extra ? "extra" : "tasks"));
 
     const list = h(`<div class="task-list"></div>`);
     const extraList = h(`<div class="task-list"></div>`);
@@ -744,7 +773,7 @@ def _pystart_exec(code, stdin, extra, echo):
     el.appendChild(list);
     if (extraNo) {
       const p = moduleProgress(m);
-      const det = h(`<details class="extra-tasks" ${task.extra ? "open" : ""}><summary>➕ Дополнительные задачи для отработки <span class="count">${p.X}/${extraNo}</span>
+      const det = h(`<details class="extra-tasks" open><summary>➕ Дополнительные задачи для отработки <span class="count">${p.X}/${extraNo}</span>
         <span class="small muted">— не обязательны для зачёта модуля</span></summary></details>`);
       det.appendChild(extraList);
       el.appendChild(det);
@@ -1000,7 +1029,9 @@ def _pystart_exec(code, stdin, extra, echo):
         const items = h(`<div class="mod-items"></div>`);
         const lessonsDone = p.L === m.lessons.length, tasksDone = p.T === p.mainTotal;
         items.appendChild(h(`<a class="${route.tab === "theory" ? "active" : ""}" href="#/m/${m.id}/theory/0"><span class="check ${lessonsDone ? "on" : ""}"></span>Теория (${p.L}/${m.lessons.length})</a>`));
-        if (m.tasks.length) items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${p.mainTotal}${p.X ? ` + ${p.X} доп.` : ""})</a>`));
+        if (m.tasks.length) items.appendChild(h(`<a class="${route.tab === "tasks" ? "active" : ""}" href="#/m/${m.id}/tasks/0"><span class="check ${tasksDone ? "on" : ""}"></span>Практика (${p.T}/${p.mainTotal})</a>`));
+        const ex = extraInfo(m);
+        if (ex.count) items.appendChild(h(`<a href="#/m/${m.id}/tasks/${ex.next}"><span class="check ${ex.solved === ex.count ? "on" : ""}"></span>➕ Отработка (${ex.solved}/${ex.count})</a>`));
         items.appendChild(h(`<a class="${route.tab === "quiz" ? "active" : ""}" href="#/m/${m.id}/quiz"><span class="check ${p.Q ? "on" : ""}"></span>Тест${p.quiz ? ` (${p.quiz.best}%)` : ""}</a>`));
         node.appendChild(items);
       }
