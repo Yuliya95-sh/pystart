@@ -71,9 +71,11 @@
     const X = m.tasks.filter((t) => t.extra && Store.data.tasks[`${m.id}.${t.id}`]).length;
     const q = Store.data.quiz[m.id];
     const Q = q && q.passed ? 1 : 0;
-    const total = m.lessons.length + main.length + 1;
-    const done = L + T + Q;
-    return { L, T, Q, X, mainTotal: main.length, done, total, pct: Math.round((done / total) * 100), complete: done === total, quiz: q };
+    // Дополнительные задачи (отработка) обязательны: входят в зачёт модуля
+    const extraTotal = m.tasks.length - main.length;
+    const total = m.lessons.length + main.length + extraTotal + 1;
+    const done = L + T + X + Q;
+    return { L, T, Q, X, mainTotal: main.length, extraTotal, done, total, pct: Math.round((done / total) * 100), complete: done === total, quiz: q };
   }
 
   function overallProgress() {
@@ -628,19 +630,19 @@ def _pystart_exec(code, stdin, extra, echo):
           <div class="stat"><b>${o.pct}%</b><span>общий прогресс</span></div>
           <div class="stat"><b>${o.lessons}</b><span>уроков изучено</span></div>
           <div class="stat"><b>${o.tasks}</b><span>задач решено</span></div>
-          <a class="stat" href="#practice" onclick="document.getElementById('practice').scrollIntoView({behavior:'smooth'});return false" style="text-decoration:none;color:inherit"><b>${o.extraSolved}/${o.extraTotal}</b><span>доп. задач для отработки ↓</span></a>
+          <a class="stat" href="#practice" onclick="document.getElementById('practice').scrollIntoView({behavior:'smooth'});return false" style="text-decoration:none;color:inherit"><b>${o.extraSolved}/${o.extraTotal}</b><span>задач для отработки (обязательно) ↓</span></a>
           <div class="stat"><b>${o.quizzes}</b><span>тестов сдано</span></div>
         </div>
       </section>
       <h2>Программа курса</h2>
       <div class="grid-mods" id="modGrid"></div>
       <h2 id="practice">➕ Отработка: дополнительные задачи</h2>
-      <p class="muted">В каждом модуле — 20 и больше задач для тренировки сверх основных. Они не обязательны для зачёта модуля, но лучше всего готовят к экзамену.</p>
+      <p class="muted">В каждом модуле — 20 и больше задач для тренировки сверх основных. <b>Они обязательны:</b> модуль засчитывается, только когда решены и основные задачи, и все задачи отработки.</p>
       <div class="grid-mods" id="extraGrid"></div>
       <h2>Как устроен каждый модуль</h2>
       <div class="grid-mods">
         <div class="card"><h3>1. Теория</h3><p class="muted small">Короткие уроки с примерами. Любой пример можно выполнить прямо на странице или отправить в песочницу.</p></div>
-        <div class="card"><h3>2. Практика</h3><p class="muted small">2–3 задачи от лёгкой к сложной. Кнопка «Проверить» прогоняет решение через открытые и скрытые тесты.</p></div>
+        <div class="card"><h3>2. Практика</h3><p class="muted small">Основные задачи и обязательная отработка (20+ задач). Кнопка «Проверить» прогоняет решение через открытые и скрытые тесты.</p></div>
         <div class="card"><h3>3. Тест</h3><p class="muted small">Вопросы в формате ЕНТ четырёх типов. После сдачи — баллы, процент и разбор каждой ошибки. Зачёт от ${QUIZ_PASS}%.</p></div>
       </div>
       <p class="small muted" style="margin-top:24px">Прогресс хранится только в этом браузере. <a href="#" id="resetProgress">Сбросить прогресс</a></p>
@@ -773,8 +775,8 @@ def _pystart_exec(code, stdin, extra, echo):
     el.appendChild(list);
     if (extraNo) {
       const p = moduleProgress(m);
-      const det = h(`<details class="extra-tasks" open><summary>➕ Дополнительные задачи для отработки <span class="count">${p.X}/${extraNo}</span>
-        <span class="small muted">— не обязательны для зачёта модуля</span></summary></details>`);
+      const det = h(`<details class="extra-tasks" open><summary>➕ Задачи для отработки <span class="count">${p.X}/${extraNo}</span>
+        <span class="small muted">— обязательны для зачёта модуля</span></summary></details>`);
       det.appendChild(extraList);
       el.appendChild(det);
     }
