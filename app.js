@@ -789,6 +789,24 @@ score = <span class="n">int</span>(<span class="n">input</span>())
         <span class="check ${solved ? "on" : ""}"></span><span class="t-title">${label}. ${esc(t.title)}</span>
         <span class="level ${LEVEL_CLASS[t.level] || "l1"}">${esc(t.level)}</span></a>`));
     });
+    // Компактный выбор задачи для телефона: вместо длинного списка — выпадающий список и стрелки
+    {
+      let mi = 0, xi = 0;
+      const opt = (t, k) => {
+        const lbl = t.extra ? `Доп. ${++xi}` : `Задача ${++mi}`;
+        const ok = Store.data.tasks[`${m.id}.${t.id}`] ? "✓ " : "";
+        return `<option value="${k}" ${k === n ? "selected" : ""}>${ok}${lbl}. ${esc(t.title)}</option>`;
+      };
+      const mains = m.tasks.map((t, k) => (t.extra ? "" : opt(t, k))).join("");
+      const extras = m.tasks.map((t, k) => (t.extra ? opt(t, k) : "")).join("");
+      const picker = h(`<div class="task-picker">
+        <a class="btn btn-ghost btn-sm" aria-label="Предыдущая задача" ${n > 0 ? `href="#/m/${m.id}/tasks/${n - 1}"` : `aria-disabled="true"`}>←</a>
+        <select aria-label="Выбор задачи">${extras ? `<optgroup label="Основные">${mains}</optgroup><optgroup label="Отработка (обязательно)">${extras}</optgroup>` : mains}</select>
+        <a class="btn btn-ghost btn-sm" aria-label="Следующая задача" ${n < m.tasks.length - 1 ? `href="#/m/${m.id}/tasks/${n + 1}"` : `aria-disabled="true"`}>→</a>
+      </div>`);
+      $("select", picker).onchange = (e) => { location.hash = `#/m/${m.id}/tasks/${e.target.value}`; };
+      el.appendChild(picker);
+    }
     el.appendChild(list);
     if (extraNo) {
       const p = moduleProgress(m);

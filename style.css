@@ -447,8 +447,6 @@ select.wrong, input.wrong { border-color: var(--bad); background: var(--bad-soft
   .match-row { grid-template-columns: 1fr; }
   .match-arrow { display: none; }
   .CodeMirror { height: 260px; font-size: 13px; }
-  .example .ex-row { grid-template-columns: 1fr; }
-  .example .ex-row > div + div { border-left: 0; border-top: 1px solid var(--border); }
 }
 
 /* =========================================================
@@ -527,4 +525,51 @@ h2 { text-transform: uppercase; font-size: 20px; }
   .ep-blue { padding: 18px 18px 20px; }
   .hero .ep-logo { font-size: clamp(40px, 16vw, 64px); }
   h2 { font-size: 17px; }
+}
+
+/* ---------- Телефон ---------- */
+.task-picker { display: none; }
+@media (max-width: 760px) {
+  /* вместо длинного списка задач — компактный выбор */
+  .task-picker { display: flex; gap: 8px; align-items: center; margin: 0 0 14px; }
+  .task-picker select { flex: 1; min-width: 0; height: 44px; font-family: inherit; font-size: 16px; border-radius: 14px; }
+  .task-picker .btn { width: 44px; height: 44px; padding: 0; font-size: 18px; flex: none; }
+  .task-picker .btn[aria-disabled] { opacity: .35; pointer-events: none; }
+  .container > .task-list, .container > details.extra-tasks { display: none; }
+
+  /* вкладки модуля компактнее */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border: 0; margin-bottom: 16px; overflow: visible; }
+  .tab { justify-content: center; padding: 9px 8px; font-size: 13.5px; gap: 5px; border: 1px solid var(--border); border-radius: 99px; margin: 0; background: var(--surface); }
+  .tab.active { background: var(--brand-pink); border-color: var(--brand-pink); color: #fff; }
+  .tab.active .count { background: rgba(255,255,255,.25); color: #fff; }
+  .page-head > div[style] { min-width: 0 !important; width: 100%; }
+
+  /* редактор и кнопки */
+  .ide-toolbar { padding: 8px; }
+  .ide-toolbar .fname { display: none; }
+  .ide-toolbar .btn-row { width: 100%; }
+  .ide-toolbar .btn-row .btn { flex: 1 1 auto; height: 40px; }
+  .kbd { display: none; }
+  .btn-sm { height: 36px; }
+  .stdin, .console { min-height: 90px; }
+  .card { padding: 16px; border-radius: 16px; }
+  .card > h2 { font-size: 17px; text-transform: none; }
+  .examples { grid-template-columns: 1fr; }
+
+  /* тесты: удобные варианты ответа */
+  .opt { padding: 12px; min-height: 48px; }
+  .quiz-sticky { flex-wrap: wrap; padding: 10px 12px; bottom: 8px; }
+  .quiz-sticky .btn { flex: 1; height: 44px; }
+  .quiz-sticky > .small { display: none; }
+  .score-card { gap: 14px; }
+
+  /* уроки */
+  .lesson-foot .btn { flex: 1; }
+  .codeblock pre { font-size: 12.5px; padding: 12px; }
+  .lesson table, .statement table, .ctx-body table { display: block; overflow-x: auto; white-space: nowrap; }
+  .sidebar { width: min(var(--sidebar-w), 86vw); }
+}
+/* iPhone не будет приближать страницу при вводе: шрифт полей не меньше 16px */
+@media (max-width: 760px) and (pointer: coarse) {
+  textarea, select, input[type="text"], .stdin, .CodeMirror textarea { font-size: 16px !important; }
 }
