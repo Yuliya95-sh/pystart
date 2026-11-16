@@ -407,7 +407,7 @@ def _pystart_exec(code, stdin, extra, echo):
   function expectedFor(task, t) {
     if (t.output !== undefined || t.assert || !task.solution) return Promise.resolve(t.output);
     if (!expectedCache.has(t)) {
-      expectedCache.set(t, Py.run(task.solution, { stdin: t.input || "", files: t.files, echo: false, timeout: 15000 })
+      expectedCache.set(t, Py.run(task.solution, { stdin: t.input || "", files: t.files, extra: t.after || "", echo: false, timeout: 15000 })
         .then((r) => (r.status === "ok" ? r.out : null)));
     }
     return expectedCache.get(t);
@@ -418,7 +418,8 @@ def _pystart_exec(code, stdin, extra, echo):
     for (let i = 0; i < task.tests.length; i++) {
       const t = task.tests[i];
       const expected = await expectedFor(task, t);
-      const res = await Py.run(code, { stdin: t.input || "", extra: t.assert || "", echo: false, timeout: t.timeout || TEST_TIMEOUT, files: t.files });
+      // t.after — код, который выполняется после программы ученика (например, печатает записанный ею файл)
+      const res = await Py.run(code, { stdin: t.input || "", extra: t.assert || t.after || "", echo: false, timeout: t.timeout || TEST_TIMEOUT, files: t.files });
       let pass, reason = "";
       if (expected === null) { pass = false; reason = "Ошибка в эталонном решении задачи"; }
       else if (res.status === "timeout") { pass = false; reason = "Превышено время (бесконечный цикл?)"; }
