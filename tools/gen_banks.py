@@ -433,8 +433,107 @@ def m2_families():
         ("multiple", ("Какие значения считаются ложными в условии if?", ["0", "''", "None", "[]"], ["'0'", "' '", "[0]"], "Ложны нули, пустые коллекции и None. Строка '0' и список [0] не пустые — истинны.")),
         ("multiple", ("Какие записи являются правильными по синтаксису?", ["if x > 0: print(x)", "y = 1 if x else 2", "if 0 < x < 5:\n    pass"], ["if x > 0 print(x)", "if (x > 0) then:", "elif x > 0:  # без if перед ним"], "После условия обязательно двоеточие; then в Python нет; elif без if недопустим.")),
     ]
+    # ---------- шахматы (обязательная тема ЕНТ в блоке условий) ----------
+    PIECES = {
+        "ладья": "x1 == x2 or y1 == y2",
+        "король": "abs(x1 - x2) <= 1 and abs(y1 - y2) <= 1",
+        "слон": "abs(x1 - x2) == abs(y1 - y2)",
+        "ферзь": "x1 == x2 or y1 == y2 or abs(x1 - x2) == abs(y1 - y2)",
+        "конь": "abs(x1 - x2) == 1 and abs(y1 - y2) == 2 or abs(x1 - x2) == 2 and abs(y1 - y2) == 1",
+    }
+
+    def cell(r):
+        return r.randint(1, 8), r.randint(1, 8)
+
+    def ch_which(b):
+        r = b.r
+        (x1, y1), (x2, y2) = cell(r), cell(r)
+        if (x1, y1) == (x2, y2):
+            return
+        prog = ("dx, dy = abs(x1 - x2), abs(y1 - y2)\nres = ''\nif dx == 0 or dy == 0:\n    res += 'Л'\nif dx <= 1 and dy <= 1:\n    res += 'К'\n"
+                "if dx == dy:\n    res += 'С'\nif dx == 1 and dy == 2 or dx == 2 and dy == 1:\n    res += 'Н'\nprint(res if res else '-')")
+        code = f"x1, y1 = {x1}, {y1}\nx2, y2 = {x2}, {y2}\n{prog}"
+        b.single_code("Шахматы. Программа выводит буквы фигур, которые могут перейти с клетки (x1, y1) на (x2, y2): Л — ладья, К — король, С — слон, Н — конь. Что выведет программа?", code,
+                      [code.replace("if dx == dy", "elif dx == dy"), code.replace("dx <= 1 and dy <= 1", "dx == 1 and dy == 1"), code.replace("dx == dy:", "x1 - x2 == y1 - y2:")],
+                      extra_wrong=["-", "ЛК", "С", "Н", "К", "КС"],
+                      explain="dx, dy — модули разностей. Ладья: dx = 0 или dy = 0; король: dx ≤ 1 и dy ≤ 1; слон: dx = dy; конь: пара 1 и 2. Отдельные if — потому что подходить могут сразу несколько фигур.")
+
+    def ch_color(b):
+        r = b.r
+        (x1, y1), (x2, y2) = cell(r), cell(r)
+        code = (f"x1, y1 = {x1}, {y1}\nx2, y2 = {x2}, {y2}\nc1 = 'black' if (x1 + y1) % 2 == 0 else 'white'\n"
+                f"c2 = 'black' if (x2 + y2) % 2 == 0 else 'white'\nprint(c1, c2)")
+        b.single("Шахматы. Клетка a1 = (1, 1) чёрная. Что выведет программа?", run(code), ["black black", "black white", "white black", "white white"], code=code,
+                 explain="Клетка чёрная, если сумма координат чётная; у соседних клеток чётность суммы разная.")
+
+    def ch_bishop(b):
+        r = b.r
+        (x1, y1), (x2, y2) = cell(r), cell(r)
+        code = (f"x1, y1, x2, y2 = {x1}, {y1}, {x2}, {y2}\nif x1 == x2 and y1 == y2:\n    print(0)\nelif abs(x1 - x2) == abs(y1 - y2):\n    print(1)\n"
+                f"elif (x1 + y1) % 2 == (x2 + y2) % 2:\n    print(2)\nelse:\n    print(-1)")
+        b.single("Шахматы. Программа находит, за сколько ходов слон дойдёт с (x1, y1) до (x2, y2). Что она выведет?", run(code), ["0", "1", "2", "-1"], code=code,
+                 explain="Слон не меняет цвет клетки: одна диагональ — 1 ход, другие клетки того же цвета — 2 хода, клетки другого цвета недостижимы (−1).")
+
+    def ch_knight(b):
+        r = b.r
+        x, y = cell(r)
+        code = (f"x, y = {x}, {y}\nk = 0\nfor dx, dy in [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]:\n"
+                f"    if 1 <= x + dx <= 8 and 1 <= y + dy <= 8:\n        k += 1\nprint(k)")
+        b.single_code("Шахматы. Сколько ходов есть у коня на клетке (x, y)? Что выведет программа?", code,
+                      [code.replace("1 <= x + dx <= 8", "1 <= x + dx < 8"), code.replace("1 <= y + dy <= 8", "0 <= y + dy <= 8")], extra_wrong=["8", "2", "4", "6", "3"],
+                      explain="У коня до 8 ходов; у края и в углу часть ходов выводит за доску (в углу их всего 2).")
+
+    def ch_cond(b):
+        r = b.r
+        piece = r.choice(list(PIECES))
+        wrong = {"ладья": ["abs(x1 - x2) == abs(y1 - y2)", "x1 == x2 and y1 == y2", "x1 == y1 or x2 == y2"],
+                 "король": ["abs(x1 - x2) == 1 and abs(y1 - y2) == 1", "abs(x1 - x2) + abs(y1 - y2) == 1", "abs(x1 - x2) < 1 or abs(y1 - y2) < 1"],
+                 "слон": ["x1 - x2 == y1 - y2", "x1 == x2 or y1 == y2", "(x1 + y1) % 2 == (x2 + y2) % 2"],
+                 "ферзь": ["x1 == x2 or y1 == y2", "abs(x1 - x2) == abs(y1 - y2)", "abs(x1 - x2) <= 1 and abs(y1 - y2) <= 1"],
+                 "конь": ["abs(x1 - x2) + abs(y1 - y2) == 3", "abs(x1 - x2) == 2 or abs(y1 - y2) == 2", "abs(x1 - x2) == 1 and abs(y1 - y2) == 1"]}[piece]
+        b.single(f"Шахматы. Какое условие истинно ровно тогда, когда {piece} может пойти с клетки (x1, y1) на другую клетку (x2, y2)?", PIECES[piece], wrong,
+                 explain="Проверьте условие на нескольких клетках: оно должно подходить ко всем ходам фигуры и не подходить к остальным.")
+
+    def m_chess(b):
+        r = b.r
+        piece = r.choice(list(PIECES))
+        x1, y1 = r.randint(2, 7), r.randint(2, 7)
+        cand = []
+        while len(cand) < 7:
+            c = cell(r)
+            if c != (x1, y1) and c not in cand:
+                cand.append(c)
+        ok = lambda s: eval(PIECES[piece], {"abs": abs, "x1": x1, "y1": y1, "x2": int(s[1]), "y2": int(s[4])})
+        b.multiple_pick(f"Шахматы. На какие клетки может пойти {piece} с клетки ({x1}, {y1}) за один ход? Других фигур на доске нет.",
+                        [f"({a}, {c})" for a, c in cand], ok, code_opts=False,
+                        explain=f"Условие хода: <code>{esc(PIECES[piece])}</code>.")
+
+    def mt_chess(b):
+        r = b.r
+        pts = r.sample([(1, 1), (1, 2), (2, 2), (1, 4), (3, 3), (2, 1), (8, 8), (4, 5)], 8)
+        code = "k = 0\nfor dx, dy in [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]:\n    if 1 <= x + dx <= 8 and 1 <= y + dy <= 8:\n        k += 1"
+        pairs, used = [], set()
+        for x, y in pts:
+            v = run(f"x, y = {x}, {y}\n{code}\nprint(k)")
+            if v not in used:
+                used.add(v)
+                pairs.append((f"({x}, {y})", v))
+        if len(pairs) >= 4:
+            b.matching("Шахматы. Сопоставьте клетку, на которой стоит конь, и число его возможных ходов.", pairs[:4],
+                       "В углу — 2 хода, рядом с углом — 3, у края — 4, ближе к центру — 6 или 8.", ["5", "7"])
+
+    def mt_piece(b):
+        r = b.r
+        rows = [("ладья", "x1 == x2 or y1 == y2"), ("король", "dx <= 1 and dy <= 1"), ("слон", "dx == dy"), ("ферзь", "dx == 0 or dy == 0 or dx == dy"),
+                ("конь", "{dx, dy} == {1, 2}"), ("одного цвета", "(x1 + y1) % 2 == (x2 + y2) % 2")]
+        pick = r.sample(rows, 4)
+        b.matching("Шахматы. Сопоставьте фигуру (или свойство клеток) и условие. dx, dy — модули разностей координат.", pick,
+                   "Король: обе разности ≤ 1; слон: разности равны; ферзь = ладья + слон; конь: разности 1 и 2.",
+                   [c for _, c in rows if (_, c) not in pick][:1] + ["dx == 1 and dy == 1"])
+
     fams = [("single", f) for f in (boolexpr, shortc, ifchain, ifsep, nested, ternary, compare)]
-    fams += [("multiple", m_values), ("multiple", m_true), ("matching", mt_input), ("matching", mt_logic)]
+    fams += [("single", f) for f in (ch_which, ch_color, ch_bishop, ch_knight, ch_cond)]
+    fams += [("multiple", m_values), ("multiple", m_true), ("multiple", m_chess), ("matching", mt_input), ("matching", mt_logic), ("matching", mt_chess), ("matching", mt_piece)]
     return fams, concepts
 
 

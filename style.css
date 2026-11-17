@@ -538,7 +538,7 @@ h2 { text-transform: uppercase; font-size: 20px; }
   .container > .task-list, .container > details.extra-tasks { display: none; }
 
   /* вкладки модуля компактнее */
-  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border: 0; margin-bottom: 16px; overflow: visible; }
+  .tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; border: 0; margin-bottom: 16px; overflow: visible; }
   .tab { justify-content: center; padding: 9px 8px; font-size: 13.5px; gap: 5px; border: 1px solid var(--border); border-radius: 99px; margin: 0; background: var(--surface); }
   .tab.active { background: var(--brand-pink); border-color: var(--brand-pink); color: #fff; }
   .tab.active .count { background: rgba(255,255,255,.25); color: #fff; }
@@ -624,4 +624,12 @@ body.gate-open { overflow: hidden; }
   .ep-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ep-stats .stat { padding: 12px 14px; }
   .ep-stats .stat b { font-size: 20px; }
+}
+@media (max-width: 380px) {
+  .tab { min-width: 0; white-space: normal; text-align: center; font-size: 12.5px; padding: 8px 6px; }
+  .tab .count { padding: 1px 5px; }
+}
+@media (max-width: 380px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .brand-logo { width: 30px; height: 30px; }
 }
