@@ -1055,20 +1055,117 @@ def m8_families():
     return fams, concepts
 
 
+# ================================================================ МОДУЛЬ 12 (практикум)
+def m12_families():
+    """Сквозной практикум: шаблоны тем модулей 1–7 + match/case и последовательности."""
+    def pick(src, names):
+        fams, _ = src()
+        return [(k, f) for k, f in fams if f.__name__ in names]
+
+    fams = []
+    fams += pick(m1_families, {"arith", "digits", "mathf", "m_equal", "mt_expr"})          # формулы, целые числа
+    fams += pick(m2_families, {"boolexpr", "ifchain", "nested", "m_values", "mt_input"})    # логика, условия
+    fams += pick(m3_families, {"forsum", "whilet", "digitsum", "minmax", "m_loops"})        # циклы, min/max
+    fams += pick(m4_families, {"slc", "meth", "loopstr", "mt_meth"})                         # строки
+    fams += pick(m5_families, {"lst", "matrix", "comp", "mt_methods"})                       # массивы, матрицы
+    fams += pick(m6_families, {"fret", "rec", "recprint", "mt_rec"})                         # функции, рекурсия
+    fams += pick(m7_families, {"files"})                                                     # файлы
+
+    def match_val(b):
+        r = b.r
+        x = r.randint(0, 9)
+        code = (f"x = {x}\nmatch x:\n    case 0:\n        print('ноль')\n    case 1 | 3 | 5 | 7 | 9:\n        print('нечётная')\n"
+                f"    case 2 | 4:\n        print('малая чётная')\n    case _:\n        print('другая')")
+        b.single_code("Что выведет программа?", code, extra_wrong=["ноль", "нечётная", "малая чётная", "другая"],
+                      explain="match сверяет значение с образцами сверху вниз; | означает «или», case _ срабатывает, если не подошёл ни один образец.")
+
+    def match_guard(b):
+        r = b.r
+        n = r.randint(-20, 120)
+        code = (f"n = {n}\nmatch n:\n    case k if k < 0:\n        print('отрицательное')\n    case 0:\n        print('ноль')\n"
+                f"    case k if k < 10:\n        print('цифра')\n    case k if k < 100:\n        print('двузначное')\n    case _:\n        print('большое')")
+        b.single_code("Что выведет программа?", code, extra_wrong=["отрицательное", "ноль", "цифра", "двузначное", "большое"],
+                      explain="Условие после if в case (guard) проверяется только для подошедшего образца; срабатывает первый case с истинным условием.")
+
+    def match_cmd(b):
+        r = b.r
+        cmd = r.choice(["go north", "go", "look", "take key", "quit", "jump high", "take"])
+        code = (f"cmd = '{cmd}'\nmatch cmd.split():\n    case ['go', d]:\n        print('идём', d)\n    case ['take', item]:\n        print('берём', item)\n"
+                f"    case ['look'] | ['quit']:\n        print('команда', cmd)\n    case _:\n        print('непонятно')")
+        b.single_code("Что выведет программа?", code, extra_wrong=["непонятно", f"команда {cmd}", "идём north", "берём key", "Ошибка"],
+                      explain="Образец-список ['go', d] подходит только к списку ровно из двух элементов, где первый — 'go'; d получает второй элемент.")
+
+    def match_vs_if(b):
+        r = b.r
+        m = r.randint(1, 12)
+        code = (f"m = {m}\nmatch m:\n    case 12 | 1 | 2:\n        s = 'зима'\n    case 3 | 4 | 5:\n        s = 'весна'\n    case 6 | 7 | 8:\n        s = 'лето'\n    case _:\n        s = 'осень'\nprint(s)")
+        b.single_code("Месяц задан номером m. Что выведет программа?", code, extra_wrong=["зима", "весна", "лето", "осень"],
+                      explain="Каждый case перечисляет подходящие значения через |; case _ ловит всё остальное.")
+
+    def mt_match(b):
+        code = ("match t:\n    case (0, 0):\n        r = 'начало'\n    case (0, y):\n        r = 'ось Y'\n    case (x, 0):\n        r = 'ось X'\n    case _:\n        r = 'плоскость'")
+        pts = b.r.sample([(0, 0), (0, 5), (0, -2), (3, 0), (-4, 0), (2, 2), (-1, 7)], 6)
+        pairs, seen = [], set()
+        for p in pts:
+            v = run(f"t = {p}\n{code}\nprint(r)")
+            if v not in seen:
+                seen.add(v)
+                pairs.append((f"t = {p}", v))
+        if len(pairs) >= 3:
+            b.matching(f"Дан фрагмент:<pre>{esc(code)}</pre>Сопоставьте значение t и результат r.", pairs[:4],
+                       "Образец (0, y) подходит к любой паре с первым элементом 0 и записывает второй элемент в y.")
+
+    def series(b):
+        r = b.r
+        a = [r.randint(-9, 15) for _ in range(r.randint(6, 9))]
+        if 0 not in a[2:]:
+            a[r.randint(3, len(a) - 1)] = 0
+        body = r.choice([
+            "s = 0\nfor x in a:\n    if x == 0:\n        break\n    s += x\nprint(s)",
+            "k = 0\nfor x in a:\n    if x > 0:\n        k += 1\nprint(k)",
+            "k = 0\nfor i in range(1, len(a)):\n    if a[i] > a[i - 1]:\n        k += 1\nprint(k)",
+            "s = 0\nfor i in range(len(a)):\n    if i % 2 == 0:\n        s += a[i]\nprint(s)",
+            "best = 0\ncur = 0\nfor x in a:\n    cur = cur + 1 if x > 0 else 0\n    best = max(best, cur)\nprint(best)",
+        ])
+        code = f"a = {a}\n{body}"
+        b.single_code("Последовательность чисел задана списком. Что выведет программа?", code,
+                      [code.replace("break", "continue"), code.replace("x > 0", "x >= 0"), code.replace("range(1,", "range(2,"), code.replace("i % 2 == 0", "i % 2 == 1")],
+                      explain="Задачи на последовательности: проход по элементам с накоплением суммы, счётчика или длины серии; break останавливает обработку.")
+
+    fams += [("single", match_val), ("single", match_guard), ("single", match_cmd), ("single", match_vs_if), ("single", series), ("matching", mt_match)]
+
+    concepts = [
+        ("single", ("С какой версии Python доступен оператор match / case?", "3.10", ["3.6", "3.8", "2.7"], "match/case появился в Python 3.10; в старых версиях вызовет SyntaxError.")),
+        ("single", ("Что означает образец case _: в конструкции match?", "любое значение (ветка «иначе»)", ["пустую строку", "None", "ошибку"], "_ — образец-джокер, подходит ко всему; обычно его ставят последним.")),
+        ("single", ("Какой конструкцией можно заменить match / case в ЕНТ-задачах?", "цепочкой if – elif – else", ["циклом while", "функцией map", "конструкцией try – except"], "Каждый case соответствует одной ветке elif.")),
+        ("single", ("Что выполнится, если ни один case не подошёл и нет case _?", "ничего — выполнение продолжится после match", ["ошибка MatchError", "первый case", "последний case"], "В отличие от некоторых языков, отсутствие совпадения — не ошибка.")),
+        ("multiple", ("Какие записи образцов в case допустимы?", ["case 1 | 2 | 3:", "case [x, y]:", "case n if n > 0:", "case _:"], ["case > 5:", "case x == 3:"], "Сравнения пишут в guard (if), а не прямо в образце.")),
+        ("multiple", ("Какие типы задач входят в классические задачники (раздел — тема)?", ["Integer — целочисленная арифметика", "Boolean — логические выражения", "Series — последовательности"], ["Graphics — рисование", "Network — работа с сетью"], "Разделы практикума: Begin, Integer, Boolean, If, Case, For, While, Series, Proc, Minmax, Array, Matrix, String, Recursion, File.")),
+    ]
+    return fams, concepts
+
+
 MODULES = {"m1": m1_families, "m2": m2_families, "m3": m3_families, "m4": m4_families,
-           "m5": m5_families, "m6": m6_families, "m7": m7_families, "m8": m8_families}
+           "m5": m5_families, "m6": m6_families, "m7": m7_families, "m8": m8_families,
+           "m12": m12_families}
 
 
-def build(mid, seed):
+def build(mid, seed, seen=None):
     fams, concepts = MODULES[mid]()
     b = Bank(mid, seed)
+    if seen:
+        b.seen |= seen   # не повторять вопросы других модулей
     for kind, data in concepts:          # сначала теория — она всегда входит
         b.concept(kind, data)
     b.fill(fams)
     # перемешиваем типы, чтобы в каждой части были все три вида вопросов
     qs = b.items["single"] + b.items["multiple"] + b.items["matching"]
     b.r.shuffle(qs)
+    ALL_SEEN.update(b.seen)
     return qs
+
+
+ALL_SEEN = set()
 
 
 def validate(mid, qs):
@@ -1110,12 +1207,13 @@ ATTACH = """
 if __name__ == "__main__":
     out = {}
     for k, mid in enumerate(MODULES):
-        qs = build(mid, 1000 + k)
+        # модули 1–8 строятся как раньше (те же вопросы), практикум — без повторов с ними
+        qs = build(mid, 1000 + k, set(ALL_SEEN) if mid == "m12" else None)
         validate(mid, qs)
         out[mid] = qs
         c = {t: sum(q["type"] == t for q in qs) for t in PER_MODULE}
         print(mid, c, "с «Ошибка» в ответе:", sum(1 for q in qs if q["type"] == "single" and q["options"][q["answer"]] == "Ошибка"))
-    js = ("/* Банки тренировочных вопросов (по 100 на модуль 1–8).\n"
+    js = ("/* Банки тренировочных вопросов (по 100 на модули 1–8 и 12).\n"
           "   Сгенерировано tools/gen_banks.py: каждый ответ вычислен запуском кода. Не редактируйте вручную. */\n"
           "window.QUESTION_BANKS = " + json.dumps(out, ensure_ascii=False, indent=0) + ";\n" + ATTACH)
     with open(os.path.join(ROOT, "question_banks.js"), "w", encoding="utf-8") as f:

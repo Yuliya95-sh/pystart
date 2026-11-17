@@ -1,4 +1,4 @@
-/* Банки тренировочных вопросов (по 100 на модуль 1–8).
+/* Банки тренировочных вопросов (по 100 на модули 1–8 и 12).
    Сгенерировано tools/gen_banks.py: каждый ответ вычислен запуском кода. Не редактируйте вручную. */
 window.QUESTION_BANKS = {
 "m1": [
@@ -13867,6 +13867,1719 @@ window.QUESTION_BANKS = {
 "answer": 1,
 "explain": "bin — двоичная (0b), oct — восьмеричная (0o), hex — шестнадцатеричная (0x). Программа выводит: <code>0x11c</code>.",
 "code": "print(hex(284))",
+"codeOptions": true
+}
+],
+"m12": [
+{
+"type": "matching",
+"q": "Установите соответствие между выражением и его значением.",
+"pairs": [
+{
+"left": "(10 - 3) * 2",
+"right": "14"
+},
+{
+"left": "10 - 3 * 2",
+"right": "4"
+},
+{
+"left": "-17 % 5",
+"right": "3"
+},
+{
+"left": "17 % 5",
+"right": "2"
+}
+],
+"explain": "Помните: <code>//</code> округляет вниз (−17 // 5 = −4), остаток всегда того же знака, что и делитель.",
+"distractors": [
+"-4",
+"3.4"
+]
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"-5",
+"2",
+"5",
+"0",
+"13",
+"-3"
+],
+"answer": [
+1,
+2,
+3
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif x > -2 and x <= 9:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"2",
+"3",
+"-2",
+"1"
+],
+"answer": 0,
+"explain": "<code>floor</code> — вниз, <code>ceil</code> — вверх, <code>trunc</code>/<code>int</code> — отбросить дробную часть, <code>round</code> — к ближайшему, а .5 — к чётному. Программа выводит: <code>2</code>.",
+"code": "import math\nprint(round(2.0))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"14",
+"22",
+"16",
+"13"
+],
+"answer": 0,
+"explain": "Рекурсия: функция вызывает сама себя с меньшим аргументом до базового случая; результат собирается на обратном ходе. Программа выводит: <code>14</code>.",
+"code": "def f(n):\n    if n == 0:\n        return 0\n    return n % 10 + f(n // 10)\n\nprint(f(6530))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"л",
+"алгорит",
+"лгорит",
+"алг"
+],
+"answer": 1,
+"explain": "Срез s[a:b:k] берёт символы с индекса a до b (не включая b) с шагом k. Программа выводит: <code>алгорит</code>.",
+"code": "s = 'алгоритм'\nprint(s[0:-1])",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"-6",
+"9",
+"7",
+"3",
+"-1",
+"0"
+],
+"answer": [
+0,
+5
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif not (x > 5) and x % 2 == 0:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Сопоставьте выражение и результат.",
+"pairs": [
+{
+"left": "len('banana')",
+"right": "6"
+},
+{
+"left": "'banana'[::-1]",
+"right": "ananab"
+},
+{
+"left": "'banana'.replace('an', '-')",
+"right": "b--a"
+},
+{
+"left": "'banana'.count('a')",
+"right": "3"
+}
+],
+"explain": "find — первое вхождение, rfind — последнее, replace заменяет все вхождения.",
+"distractors": [
+"2",
+"4"
+]
+},
+{
+"type": "single",
+"q": "Файл data.txt содержит строки:<pre>Aru 92\nTimur 86\nErlan 66</pre>Что выведет программа?",
+"options": [
+"2",
+"Ошибка",
+"4",
+"3"
+],
+"answer": 3,
+"explain": "readlines() возвращает список строк; for line in f перебирает строки файла; split() делит строку по пробелам. Программа выводит: <code>3</code>.",
+"code": "f = open('data.txt')\nprint(len(f.readlines()))\nf.close()",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"3 2 1",
+"1 2 3",
+"3 2 1 1 2 3",
+"0"
+],
+"answer": 1,
+"explain": "Печать ДО рекурсивного вызова выполняется на прямом ходе (n, n−1, …), ПОСЛЕ — на обратном (1, 2, …, n). Программа выводит: <code>1 2 3</code>.",
+"code": "def f(n):\n    if n > 0:\n        f(n - 1)\n        print(n, end=' ')\n\nf(3)",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Установите соответствие между выражением и его значением.",
+"pairs": [
+{
+"left": "17 % 5",
+"right": "2"
+},
+{
+"left": "17 // 5",
+"right": "3"
+},
+{
+"left": "-17 // 5",
+"right": "-4"
+},
+{
+"left": "int(-3.7)",
+"right": "-3"
+}
+],
+"explain": "Помните: <code>//</code> округляет вниз (−17 // 5 = −4), остаток всегда того же знака, что и делитель.",
+"distractors": [
+"3.4",
+"32"
+]
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"4.4",
+"4",
+"110",
+"2"
+],
+"answer": 1,
+"explain": "<code>//</code> — целочисленное деление (округление вниз), <code>%</code> — остаток, <code>/</code> — всегда float, <code>**</code> — степень. Программа выводит: <code>4</code>.",
+"code": "a = 22\nb = 5\nprint(a // b)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"4",
+"10",
+"5",
+"7"
+],
+"answer": 2,
+"explain": "Трассируйте: проверка условия → тело → снова проверка. Цикл заканчивается, когда условие ложно. Программа выводит: <code>5</code>.",
+"code": "n = 325\nc = 0\nwhile n > 0:\n    n //= 10\n    c += n % 10\nprint(c)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"13",
+"12",
+"4",
+"14",
+"10",
+"9"
+],
+"answer": [
+2,
+3
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif x < 8 or x >= 14:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"None",
+"False",
+"True",
+"Ошибка"
+],
+"answer": 1,
+"explain": "<code>and</code> — истинно, только если оба истинны; <code>or</code> — если хотя бы одно; <code>not</code> меняет значение; цепочка <code>a &lt; x &lt;= b</code> проверяет оба сравнения.",
+"code": "x = -1\ny = 9\nprint(x > 0 and y > 0)",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дана функция:<pre>def f(n):\n    if n &lt;= 1:\n        return 1\n    return f(n - 1) + f(n - 2)</pre>Сопоставьте вызов и результат.",
+"pairs": [
+{
+"left": "f(5)",
+"right": "8"
+},
+{
+"left": "f(6)",
+"right": "13"
+},
+{
+"left": "f(4)",
+"right": "5"
+},
+{
+"left": "f(2)",
+"right": "2"
+}
+],
+"explain": "f(0) = f(1) = 1, далее каждое значение — сумма двух предыдущих."
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 4 — ровно целое число 4 (тип int)?",
+"options": [
+"4 * 1.0",
+"8 / 2",
+"40 % 10",
+"8 // 2",
+"round(4.4)",
+"4 ** 1"
+],
+"answer": [
+3,
+4,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 4.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"36] 25, 16, 9, 4, 1, [0,",
+"[1, 4, 9, 16, 25, 36, 49]",
+"[0, 1, 4, 9, 16, 25, 36]",
+"1, 4, 9, 16, 25, 36]"
+],
+"answer": 2,
+"explain": "Генератор списка: [выражение for элемент in последовательность if условие]. Программа выводит: <code>[0, 1, 4, 9, 16, 25, 36]</code>.",
+"code": "print([i * i for i in range(7)])",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"4",
+"15",
+"6",
+"5"
+],
+"answer": 3,
+"explain": "range(a, b, step) не включает b. Переберите значения i и выполните тело цикла для каждого. Программа выводит: <code>5</code>.",
+"code": "s = 0\nfor i in range(1, 6, 3):\n    s += i\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"7",
+"17",
+"1",
+"[14, 19, 7, 7]"
+],
+"answer": 2,
+"explain": "Индексация с 0, срез не включает правую границу. Программа выводит: <code>1</code>.",
+"code": "a = [17, 14, 19, 7, 7]\nprint(a.count(a[0]))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"5",
+"None",
+"5\nNone",
+"4"
+],
+"answer": 3,
+"explain": "Функция без return возвращает None; return сразу завершает функцию. Программа выводит: <code>4</code>.",
+"code": "def f(x, y):\n    return x if x > y else y\n\nprint(f(4, 1))",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Установите соответствие между выражением и его значением.",
+"pairs": [
+{
+"left": "abs(-12)",
+"right": "12"
+},
+{
+"left": "17 % 5",
+"right": "2"
+},
+{
+"left": "5 ** 0",
+"right": "1"
+},
+{
+"left": "round(3.5)",
+"right": "4"
+}
+],
+"explain": "Помните: <code>//</code> округляет вниз (−17 // 5 = −4), остаток всегда того же знака, что и делитель.",
+"distractors": [
+"3",
+"-4"
+]
+},
+{
+"type": "multiple",
+"q": "Какие фрагменты выведут ровно 5 строк(и)?",
+"options": [
+"for i in range(5): print(i)",
+"i = 5\nwhile i > 0:\n    print(i)\n    i -= 2",
+"for i in range(10, 0, -2): print(i)",
+"i = 1\nwhile i < 32:\n    print(i)\n    i *= 2",
+"i = 0\nwhile i < 5:\n    print(i)\n    i += 1",
+"for i in range(5, 0): print(i)"
+],
+"answer": [
+0,
+2,
+3,
+4
+],
+"explain": "Посчитайте количество повторений тела цикла.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"A",
+"B",
+"A\nB",
+"C"
+],
+"answer": 0,
+"explain": "В цепочке if–elif–else выполняется только первая ветка с истинным условием; граничные значения проверяйте по знаку (&gt; или &gt;=). Программа выводит: <code>A</code>.",
+"code": "x = 11\nif x >= 11:\n    print('A')\nelif x > 6:\n    print('B')\nelse:\n    print('C')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "С какой версии Python доступен оператор match / case?",
+"options": [
+"2.7",
+"3.6",
+"3.8",
+"3.10"
+],
+"answer": 3,
+"explain": "match/case появился в Python 3.10; в старых версиях вызовет SyntaxError."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"125",
+"2",
+"1.6666666666666667",
+"1"
+],
+"answer": 0,
+"explain": "<code>//</code> — целочисленное деление (округление вниз), <code>%</code> — остаток, <code>/</code> — всегда float, <code>**</code> — степень. Программа выводит: <code>125</code>.",
+"code": "a = 5\nb = 3\nprint(a ** b)",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан фрагмент программы. Сопоставьте значение x и значение r после его выполнения.<pre>if x &lt; 0:\n    r = 'A'\nelif x &lt; 6:\n    r = 'B'\nelif x == 6:\n    r = 'C'\nelse:\n    r = 'D'</pre>",
+"pairs": [
+{
+"left": "x = -1",
+"right": "A"
+},
+{
+"left": "x = 1",
+"right": "B"
+},
+{
+"left": "x = 6",
+"right": "C"
+},
+{
+"left": "x = 8",
+"right": "D"
+}
+],
+"explain": "Проверяйте условия сверху вниз: срабатывает первое истинное."
+},
+{
+"type": "single",
+"q": "Что означает образец case _: в конструкции match?",
+"options": [
+"пустую строку",
+"любое значение (ветка «иначе»)",
+"None",
+"ошибку"
+],
+"answer": 1,
+"explain": "_ — образец-джокер, подходит ко всему; обычно его ставят последним."
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 5 — ровно целое число 5 (тип int)?",
+"options": [
+"10 / 2",
+"10 // 2",
+"abs(-5)",
+"5 * 1.0",
+"len('aaaaa')",
+"int('5')"
+],
+"answer": [
+1,
+2,
+4,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 5.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Какой конструкцией можно заменить match / case в ЕНТ-задачах?",
+"options": [
+"функцией map",
+"цепочкой if – elif – else",
+"циклом while",
+"конструкцией try – except"
+],
+"answer": 1,
+"explain": "Каждый case соответствует одной ветке elif."
+},
+{
+"type": "multiple",
+"q": "Какие фрагменты выведут ровно 5 строк(и)?",
+"options": [
+"i = 1\nwhile i < 32:\n    print(i)\n    i *= 2",
+"for i in range(10, 0, -2): print(i)",
+"for i in range(0, 10, 2): print(i)",
+"for i in range(1, 5): print(i)",
+"i = 5\nwhile i > 0:\n    print(i)\n    i -= 2",
+"for c in 'hello': print(c)"
+],
+"answer": [
+0,
+1,
+2,
+5
+],
+"explain": "Посчитайте количество повторений тела цикла.",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 2 — ровно целое число 2 (тип int)?",
+"options": [
+"20 % 10",
+"20 // 10",
+"2 * 1.0",
+"3 - 1",
+"int('2')",
+"abs(-2)"
+],
+"answer": [
+1,
+3,
+4,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 2.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"цифра",
+"отрицательное",
+"ноль",
+"двузначное"
+],
+"answer": 3,
+"explain": "Условие после if в case (guard) проверяется только для подошедшего образца; срабатывает первый case с истинным условием. Программа выводит: <code>двузначное</code>.",
+"code": "n = 79\nmatch n:\n    case k if k < 0:\n        print('отрицательное')\n    case 0:\n        print('ноль')\n    case k if k < 10:\n        print('цифра')\n    case k if k < 100:\n        print('двузначное')\n    case _:\n        print('большое')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"7",
+"273",
+"3",
+"35"
+],
+"answer": 0,
+"explain": "Здесь вычисляется цифра сотен: <code>// 10</code> отбрасывает последнюю цифру, <code>% 10</code> берёт последнюю. Программа выводит: <code>7</code>.",
+"code": "n = 2735\nprint(n // 100 % 10)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие фрагменты выведут ровно 5 строк(и)?",
+"options": [
+"for c in 'hello': print(c)",
+"i = 5\nwhile i > 0:\n    print(i)\n    i -= 2",
+"for i in range(5): print(i)",
+"for i in range(10, 0, -2): print(i)",
+"for i in range(5, 0): print(i)",
+"i = 0\nwhile i < 5:\n    print(i)\n    i += 1"
+],
+"answer": [
+0,
+2,
+3,
+5
+],
+"explain": "Посчитайте количество повторений тела цикла.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Месяц задан номером m. Что выведет программа?",
+"options": [
+"осень",
+"весна",
+"зима",
+"лето"
+],
+"answer": 1,
+"explain": "Каждый case перечисляет подходящие значения через |; case _ ловит всё остальное. Программа выводит: <code>весна</code>.",
+"code": "m = 3\nmatch m:\n    case 12 | 1 | 2:\n        s = 'зима'\n    case 3 | 4 | 5:\n        s = 'весна'\n    case 6 | 7 | 8:\n        s = 'лето'\n    case _:\n        s = 'осень'\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"9",
+"8",
+"11",
+"10"
+],
+"answer": 0,
+"explain": "Рекурсия: функция вызывает сама себя с меньшим аргументом до базового случая; результат собирается на обратном ходе. Программа выводит: <code>9</code>.",
+"code": "def f(n):\n    if n <= 0:\n        return 0\n    return n + f(n - 2)\n\nprint(f(5))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"6",
+"101",
+"0",
+"29"
+],
+"answer": 3,
+"explain": "Начальное значение важно: если искать максимум, начиная с 0, для отрицательных чисел ответ будет неверным. Программа выводит: <code>29</code>.",
+"code": "a = [8, 12, 8, 29, 15, 29]\nm = 0\nfor x in a:\n    if x > m:\n        m = x\nprint(m)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"720",
+"7",
+"0",
+"3"
+],
+"answer": 3,
+"explain": "Здесь вычисляется последняя цифра: <code>// 10</code> отбрасывает последнюю цифру, <code>% 10</code> берёт последнюю. Программа выводит: <code>3</code>.",
+"code": "n = 7203\nprint(n % 10)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"None",
+"True",
+"False",
+"Ошибка"
+],
+"answer": 1,
+"explain": "<code>and</code> — истинно, только если оба истинны; <code>or</code> — если хотя бы одно; <code>not</code> меняет значение; цепочка <code>a &lt; x &lt;= b</code> проверяет оба сравнения.",
+"code": "x = 0\ny = 10\nprint(-3 < x <= y)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"6] 5, [1,",
+"[1, 5,",
+"[1, 5, 6]",
+"5, 6]"
+],
+"answer": 2,
+"explain": "Генератор списка: [выражение for элемент in последовательность if условие]. Программа выводит: <code>[1, 5, 6]</code>.",
+"code": "print([len(w) for w in 'я люблю python'.split()])",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие типы задач входят в классические задачники (раздел — тема)?",
+"options": [
+"Series — последовательности",
+"Integer — целочисленная арифметика",
+"Graphics — рисование",
+"Network — работа с сетью",
+"Boolean — логические выражения"
+],
+"answer": [
+0,
+1,
+4
+],
+"explain": "Разделы практикума: Begin, Integer, Boolean, If, Case, For, While, Series, Proc, Minmax, Array, Matrix, String, Recursion, File."
+},
+{
+"type": "matching",
+"q": "Сопоставьте выражение и результат.",
+"pairs": [
+{
+"left": "len('banana')",
+"right": "6"
+},
+{
+"left": "'banana'[::-1]",
+"right": "ananab"
+},
+{
+"left": "'banana'.index('b')",
+"right": "0"
+},
+{
+"left": "'banana'.find('n')",
+"right": "2"
+}
+],
+"explain": "find — первое вхождение, rfind — последнее, replace заменяет все вхождения.",
+"distractors": [
+"3",
+"4"
+]
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"4",
+"3",
+"5",
+"6"
+],
+"answer": 0,
+"explain": "Трассируйте: проверка условия → тело → снова проверка. Цикл заканчивается, когда условие ложно. Программа выводит: <code>4</code>.",
+"code": "n = 61\nc = 0\nwhile n > 5:\n    n //= 2\n    c += 1\nprint(c)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 5 — ровно целое число 5 (тип int)?",
+"options": [
+"50 % 10",
+"50 // 10",
+"15 % 16 // 3",
+"int(5.9)",
+"10 / 2",
+"abs(-5)"
+],
+"answer": [
+1,
+2,
+3,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 5.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"3",
+"-1",
+"2",
+"-8",
+"-6",
+"0"
+],
+"answer": [
+0,
+1,
+2,
+5
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif x > -4 and x <= 4:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"нечётная",
+"другая",
+"малая чётная",
+"ноль"
+],
+"answer": 0,
+"explain": "match сверяет значение с образцами сверху вниз; | означает «или», case _ срабатывает, если не подошёл ни один образец. Программа выводит: <code>нечётная</code>.",
+"code": "x = 3\nmatch x:\n    case 0:\n        print('ноль')\n    case 1 | 3 | 5 | 7 | 9:\n        print('нечётная')\n    case 2 | 4:\n        print('малая чётная')\n    case _:\n        print('другая')",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан список a = [8, 7, 5, 5]. Сопоставьте операцию и состояние списка после неё (каждая операция применяется к исходному списку).",
+"pairs": [
+{
+"left": "a.append(0)",
+"right": "[8, 7, 5, 5, 0]"
+},
+{
+"left": "a.pop(0)",
+"right": "[7, 5, 5]"
+},
+{
+"left": "a.insert(0, 0)",
+"right": "[0, 8, 7, 5, 5]"
+},
+{
+"left": "a.pop()",
+"right": "[8, 7, 5]"
+}
+],
+"explain": "Операции изменяют список на месте."
+},
+{
+"type": "matching",
+"q": "Дана функция:<pre>def f(n):\n    if n &lt;= 1:\n        return 1\n    return f(n - 1) + f(n - 2)</pre>Сопоставьте вызов и результат.",
+"pairs": [
+{
+"left": "f(5)",
+"right": "8"
+},
+{
+"left": "f(1)",
+"right": "1"
+},
+{
+"left": "f(6)",
+"right": "13"
+},
+{
+"left": "f(2)",
+"right": "2"
+}
+],
+"explain": "f(0) = f(1) = 1, далее каждое значение — сумма двух предыдущих."
+},
+{
+"type": "single",
+"q": "Последовательность чисел задана списком. Что выведет программа?",
+"options": [
+"-8",
+"-7",
+"8",
+"-9"
+],
+"answer": 0,
+"explain": "Задачи на последовательности: проход по элементам с накоплением суммы, счётчика или длины серии; break останавливает обработку. Программа выводит: <code>-8</code>.",
+"code": "a = [4, 12, 5, 0, -9, 11, -8, -6]\ns = 0\nfor i in range(len(a)):\n    if i % 2 == 0:\n        s += a[i]\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"3",
+"12",
+"17",
+"2",
+"1",
+"13"
+],
+"answer": [
+1,
+3
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif not (x > 14) and x % 2 == 0:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 2 — ровно целое число 2 (тип int)?",
+"options": [
+"4 // 2",
+"2 * 1.0",
+"4 / 2",
+"len('aa')",
+"3 // 1 - 1",
+"2 ** 1"
+],
+"answer": [
+0,
+3,
+4,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 2.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"берём key",
+"Ошибка",
+"непонятно",
+"команда take key"
+],
+"answer": 0,
+"explain": "Образец-список ['go', d] подходит только к списку ровно из двух элементов, где первый — 'go'; d получает второй элемент. Программа выводит: <code>берём key</code>.",
+"code": "cmd = 'take key'\nmatch cmd.split():\n    case ['go', d]:\n        print('идём', d)\n    case ['take', item]:\n        print('берём', item)\n    case ['look'] | ['quit']:\n        print('команда', cmd)\n    case _:\n        print('непонятно')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"-3",
+"4",
+"-4",
+"-5"
+],
+"answer": 2,
+"explain": "<code>floor</code> — вниз, <code>ceil</code> — вверх, <code>trunc</code>/<code>int</code> — отбросить дробную часть, <code>round</code> — к ближайшему, а .5 — к чётному. Программа выводит: <code>-4</code>.",
+"code": "import math\nprint(math.ceil(-4.7))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"1",
+"11",
+"[5, 6, 3]",
+"9"
+],
+"answer": 3,
+"explain": "m[i][j] — элемент строки i и столбца j. Главная диагональ — m[i][i], побочная — m[i][n−1−i]. Программа выводит: <code>9</code>.",
+"code": "m = [[5, 5, 1], [1, 6, 2], [5, 3, 7]]\nprint(len(m) * len(m[0]))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"двузначное",
+"цифра",
+"большое",
+"ноль"
+],
+"answer": 0,
+"explain": "Условие после if в case (guard) проверяется только для подошедшего образца; срабатывает первый case с истинным условием. Программа выводит: <code>двузначное</code>.",
+"code": "n = 65\nmatch n:\n    case k if k < 0:\n        print('отрицательное')\n    case 0:\n        print('ноль')\n    case k if k < 10:\n        print('цифра')\n    case k if k < 100:\n        print('двузначное')\n    case _:\n        print('большое')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"61",
+"22",
+"6",
+"-3"
+],
+"answer": 1,
+"explain": "Начальное значение важно: если искать максимум, начиная с 0, для отрицательных чисел ответ будет неверным. Программа выводит: <code>22</code>.",
+"code": "a = [16, -1, 10, 17, 22, -3]\nm = 0\nfor x in a:\n    if x > m:\n        m = x\nprint(m)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"II",
+"III",
+"I",
+"0"
+],
+"answer": 0,
+"explain": "Сначала проверяется внешнее условие, затем — вложенное внутри выбранной ветки. Программа выводит: <code>II</code>.",
+"code": "a = -5\nb = 1\nif a > 0:\n    if b > 0:\n        print('I')\n    else:\n        print('IV')\nelse:\n    if b > 0:\n        print('II')\n    else:\n        print('III')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"B",
+"C",
+"A\nB",
+"A"
+],
+"answer": 1,
+"explain": "В цепочке if–elif–else выполняется только первая ветка с истинным условием; граничные значения проверяйте по знаку (&gt; или &gt;=). Программа выводит: <code>C</code>.",
+"code": "x = -2\nif x > 10:\n    print('A')\nelif x >= -1:\n    print('B')\nelse:\n    print('C')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"4",
+"10",
+"3",
+"5"
+],
+"answer": 3,
+"explain": "<code>n % 10</code> — последняя цифра, <code>n //= 10</code> — убрать её. Цикл перебирает цифры справа налево. Программа выводит: <code>5</code>.",
+"code": "n = 88957\ns = 0\nwhile n > 0:\n    s += 1\n    n //= 10\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Файл data.txt содержит строки:<pre>Ali 94\nErlan 100\nErlan 73\nErlan 74</pre>Что выведет программа?",
+"options": [
+"Ошибка",
+"Ali 94",
+"3",
+"5"
+],
+"answer": 1,
+"explain": "readlines() возвращает список строк; for line in f перебирает строки файла; split() делит строку по пробелам. Программа выводит: <code>Ali 94</code>.",
+"code": "with open('data.txt') as f:\n    print(f.readline().strip())",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан фрагмент программы. Сопоставьте значение x и значение r после его выполнения.<pre>if x &lt; 0:\n    r = 'A'\nelif x &lt; 5:\n    r = 'B'\nelif x == 5:\n    r = 'C'\nelse:\n    r = 'D'</pre>",
+"pairs": [
+{
+"left": "x = -1",
+"right": "A"
+},
+{
+"left": "x = 4",
+"right": "B"
+},
+{
+"left": "x = 5",
+"right": "C"
+},
+{
+"left": "x = 7",
+"right": "D"
+}
+],
+"explain": "Проверяйте условия сверху вниз: срабатывает первое истинное."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"непонятно",
+"берём key",
+"команда look",
+"Ошибка"
+],
+"answer": 2,
+"explain": "Образец-список ['go', d] подходит только к списку ровно из двух элементов, где первый — 'go'; d получает второй элемент. Программа выводит: <code>команда look</code>.",
+"code": "cmd = 'look'\nmatch cmd.split():\n    case ['go', d]:\n        print('идём', d)\n    case ['take', item]:\n        print('берём', item)\n    case ['look'] | ['quit']:\n        print('команда', cmd)\n    case _:\n        print('непонятно')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Последовательность чисел задана списком. Что выведет программа?",
+"options": [
+"8",
+"-4",
+"-8",
+"9"
+],
+"answer": 0,
+"explain": "Задачи на последовательности: проход по элементам с накоплением суммы, счётчика или длины серии; break останавливает обработку. Программа выводит: <code>8</code>.",
+"code": "a = [-7, -8, -1, 4, 2, 0, 14]\ns = 0\nfor i in range(len(a)):\n    if i % 2 == 0:\n        s += a[i]\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан список a = [2, 7, 8, 7]. Сопоставьте операцию и состояние списка после неё (каждая операция применяется к исходному списку).",
+"pairs": [
+{
+"left": "a.append(0)",
+"right": "[2, 7, 8, 7, 0]"
+},
+{
+"left": "a.pop()",
+"right": "[2, 7, 8]"
+},
+{
+"left": "a.reverse()",
+"right": "[7, 8, 7, 2]"
+},
+{
+"left": "a.insert(0, 0)",
+"right": "[0, 2, 7, 8, 7]"
+}
+],
+"explain": "Операции изменяют список на месте."
+},
+{
+"type": "matching",
+"q": "Дан фрагмент программы. Сопоставьте значение x и значение r после его выполнения.<pre>if x &lt; 0:\n    r = 'A'\nelif x &lt; 4:\n    r = 'B'\nelif x == 4:\n    r = 'C'\nelse:\n    r = 'D'</pre>",
+"pairs": [
+{
+"left": "x = -3",
+"right": "A"
+},
+{
+"left": "x = 3",
+"right": "B"
+},
+{
+"left": "x = 4",
+"right": "C"
+},
+{
+"left": "x = 6",
+"right": "D"
+}
+],
+"explain": "Проверяйте условия сверху вниз: срабатывает первое истинное."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"7",
+"3",
+"73",
+"9"
+],
+"answer": 2,
+"explain": "Здесь вычисляется две последние цифры: <code>// 10</code> отбрасывает последнюю цифру, <code>% 10</code> берёт последнюю. Программа выводит: <code>73</code>.",
+"code": "n = 9873\nprint(n % 100)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"0",
+"III",
+"II",
+"IV"
+],
+"answer": 2,
+"explain": "Сначала проверяется внешнее условие, затем — вложенное внутри выбранной ветки. Программа выводит: <code>II</code>.",
+"code": "a = -4\nb = 3\nif a > 0:\n    if b > 0:\n        print('I')\n    else:\n        print('IV')\nelse:\n    if b > 0:\n        print('II')\n    else:\n        print('III')",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан фрагмент:<pre>match t:\n    case (0, 0):\n        r = 'начало'\n    case (0, y):\n        r = 'ось Y'\n    case (x, 0):\n        r = 'ось X'\n    case _:\n        r = 'плоскость'</pre>Сопоставьте значение t и результат r.",
+"pairs": [
+{
+"left": "t = (3, 0)",
+"right": "ось X"
+},
+{
+"left": "t = (0, 0)",
+"right": "начало"
+},
+{
+"left": "t = (-1, 7)",
+"right": "плоскость"
+},
+{
+"left": "t = (0, -2)",
+"right": "ось Y"
+}
+],
+"explain": "Образец (0, y) подходит к любой паре с первым элементом 0 и записывает второй элемент в y."
+},
+{
+"type": "matching",
+"q": "Дан фрагмент:<pre>match t:\n    case (0, 0):\n        r = 'начало'\n    case (0, y):\n        r = 'ось Y'\n    case (x, 0):\n        r = 'ось X'\n    case _:\n        r = 'плоскость'</pre>Сопоставьте значение t и результат r.",
+"pairs": [
+{
+"left": "t = (2, 2)",
+"right": "плоскость"
+},
+{
+"left": "t = (3, 0)",
+"right": "ось X"
+},
+{
+"left": "t = (0, 5)",
+"right": "ось Y"
+},
+{
+"left": "t = (0, 0)",
+"right": "начало"
+}
+],
+"explain": "Образец (0, y) подходит к любой паре с первым элементом 0 и записывает второй элемент в y."
+},
+{
+"type": "matching",
+"q": "Установите соответствие между выражением и его значением.",
+"pairs": [
+{
+"left": "17 % 5",
+"right": "2"
+},
+{
+"left": "-17 // 5",
+"right": "-4"
+},
+{
+"left": "17 // 5",
+"right": "3"
+},
+{
+"left": "round(4.5)",
+"right": "4"
+}
+],
+"explain": "Помните: <code>//</code> округляет вниз (−17 // 5 = −4), остаток всегда того же знака, что и делитель.",
+"distractors": [
+"3.4",
+"32"
+]
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"26",
+"27",
+"25",
+"52"
+],
+"answer": 0,
+"explain": "<code>n % 10</code> — последняя цифра, <code>n //= 10</code> — убрать её. Цикл перебирает цифры справа налево. Программа выводит: <code>26</code>.",
+"code": "n = 45692\ns = 0\nwhile n > 0:\n    s += n % 10\n    n //= 10\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"5=3+2",
+"2+3=5",
+"5",
+"10"
+],
+"answer": 3,
+"explain": "Цикл for c in s перебирает символы строки по одному слева направо. Программа выводит: <code>10</code>.",
+"code": "s = '2+3=5'\nk = 0\nfor c in s:\n    if c.isdigit():\n        k += int(c)\nprint(k)",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан фрагмент:<pre>match t:\n    case (0, 0):\n        r = 'начало'\n    case (0, y):\n        r = 'ось Y'\n    case (x, 0):\n        r = 'ось X'\n    case _:\n        r = 'плоскость'</pre>Сопоставьте значение t и результат r.",
+"pairs": [
+{
+"left": "t = (0, 0)",
+"right": "начало"
+},
+{
+"left": "t = (3, 0)",
+"right": "ось X"
+},
+{
+"left": "t = (0, 5)",
+"right": "ось Y"
+},
+{
+"left": "t = (2, 2)",
+"right": "плоскость"
+}
+],
+"explain": "Образец (0, y) подходит к любой паре с первым элементом 0 и записывает второй элемент в y."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"3",
+"0",
+"2",
+"1"
+],
+"answer": 1,
+"explain": "<code>floor</code> — вниз, <code>ceil</code> — вверх, <code>trunc</code>/<code>int</code> — отбросить дробную часть, <code>round</code> — к ближайшему, а .5 — к чётному. Программа выводит: <code>0</code>.",
+"code": "import math\nprint(math.ceil(-0.5))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"fun",
+"n",
+"u",
+"unc"
+],
+"answer": 2,
+"explain": "Срез s[a:b:k] берёт символы с индекса a до b (не включая b) с шагом k. Программа выводит: <code>u</code>.",
+"code": "s = 'function'\nprint(s[1:3:3])",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Сопоставьте выражение и результат.",
+"pairs": [
+{
+"left": "'banana'.find('n')",
+"right": "2"
+},
+{
+"left": "'banana'[1:4]",
+"right": "ana"
+},
+{
+"left": "'banana'.replace('an', '-')",
+"right": "b--a"
+},
+{
+"left": "'banana'.rfind('n')",
+"right": "4"
+}
+],
+"explain": "find — первое вхождение, rfind — последнее, replace заменяет все вхождения.",
+"distractors": [
+"3",
+"BANANA"
+]
+},
+{
+"type": "matching",
+"q": "Дан список a = [4, 5, 1, 4]. Сопоставьте операцию и состояние списка после неё (каждая операция применяется к исходному списку).",
+"pairs": [
+{
+"left": "a.remove(a[-1])",
+"right": "[5, 1, 4]"
+},
+{
+"left": "a.pop()",
+"right": "[4, 5, 1]"
+},
+{
+"left": "del a[1:3]",
+"right": "[4, 4]"
+},
+{
+"left": "a.extend([0, 0])",
+"right": "[4, 5, 1, 4, 0, 0]"
+}
+],
+"explain": "Операции изменяют список на месте."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"False",
+"True",
+"Ошибка",
+"None"
+],
+"answer": 0,
+"explain": "<code>and</code> — истинно, только если оба истинны; <code>or</code> — если хотя бы одно; <code>not</code> меняет значение; цепочка <code>a &lt; x &lt;= b</code> проверяет оба сравнения.",
+"code": "x = 10\ny = -1\nprint(x > 0 and y > 0)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 3 — ровно целое число 3 (тип int)?",
+"options": [
+"6 // 2",
+"3 ** 1",
+"30 % 10",
+"round(3.4)",
+"3 * 1.0",
+"30 // 10"
+],
+"answer": [
+0,
+1,
+3,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 3.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"другая",
+"нечётная",
+"ноль",
+"малая чётная"
+],
+"answer": 0,
+"explain": "match сверяет значение с образцами сверху вниз; | означает «или», case _ срабатывает, если не подошёл ни один образец. Программа выводит: <code>другая</code>.",
+"code": "x = 8\nmatch x:\n    case 0:\n        print('ноль')\n    case 1 | 3 | 5 | 7 | 9:\n        print('нечётная')\n    case 2 | 4:\n        print('малая чётная')\n    case _:\n        print('другая')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"-0.6666666666666666",
+"-6",
+"-1",
+"1"
+],
+"answer": 0,
+"explain": "<code>//</code> — целочисленное деление (округление вниз), <code>%</code> — остаток, <code>/</code> — всегда float, <code>**</code> — степень. Программа выводит: <code>-0.6666666666666666</code>.",
+"code": "a = -2\nb = 3\nprint(a / b)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"1 2",
+"2 1 1 2",
+"0",
+"2 1"
+],
+"answer": 0,
+"explain": "Печать ДО рекурсивного вызова выполняется на прямом ходе (n, n−1, …), ПОСЛЕ — на обратном (1, 2, …, n). Программа выводит: <code>1 2</code>.",
+"code": "def f(n):\n    if n > 0:\n        f(n - 1)\n        print(n, end=' ')\n\nf(2)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"Ошибка",
+"18",
+"None",
+"9"
+],
+"answer": 1,
+"explain": "Функция без return возвращает None; return сразу завершает функцию. Программа выводит: <code>18</code>.",
+"code": "def f(x, y):\n    s = 0\n    for i in range(x):\n        s += y\n    return s\n\nprint(f(6, 3))",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выполнится, если ни один case не подошёл и нет case _?",
+"options": [
+"первый case",
+"ничего — выполнение продолжится после match",
+"ошибка MatchError",
+"последний case"
+],
+"answer": 1,
+"explain": "В отличие от некоторых языков, отсутствие совпадения — не ошибка."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"18",
+"3",
+"0",
+"[3, 7]"
+],
+"answer": 1,
+"explain": "Индексация с 0, срез не включает правую границу. Программа выводит: <code>3</code>.",
+"code": "a = [18, 3, 7, 13, 14, 4, 0]\nprint(sorted(a)[1])",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"2",
+"[5, 7, 8]",
+"22",
+"8"
+],
+"answer": 0,
+"explain": "m[i][j] — элемент строки i и столбца j. Главная диагональ — m[i][i], побочная — m[i][n−1−i]. Программа выводит: <code>2</code>.",
+"code": "m = [[9, 5, 8], [3, 7, 3], [2, 8, 6]]\nprint(m[2][0])",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"-1",
+"Ошибка",
+"3",
+"6"
+],
+"answer": 2,
+"explain": "Методы строк не изменяют исходную строку, а возвращают новый результат; find возвращает −1, если подстроки нет, а index — ошибку. Программа выводит: <code>3</code>.",
+"code": "s = 'Banana'\nprint(s.count('a'))",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дана функция:<pre>def f(n):\n    if n &lt;= 1:\n        return 1\n    return f(n - 1) + f(n - 2)</pre>Сопоставьте вызов и результат.",
+"pairs": [
+{
+"left": "f(3)",
+"right": "3"
+},
+{
+"left": "f(7)",
+"right": "21"
+},
+{
+"left": "f(1)",
+"right": "1"
+},
+{
+"left": "f(4)",
+"right": "5"
+}
+],
+"explain": "f(0) = f(1) = 1, далее каждое значение — сумма двух предыдущих."
+},
+{
+"type": "single",
+"q": "Месяц задан номером m. Что выведет программа?",
+"options": [
+"осень",
+"лето",
+"зима",
+"весна"
+],
+"answer": 1,
+"explain": "Каждый case перечисляет подходящие значения через |; case _ ловит всё остальное. Программа выводит: <code>лето</code>.",
+"code": "m = 8\nmatch m:\n    case 12 | 1 | 2:\n        s = 'зима'\n    case 3 | 4 | 5:\n        s = 'весна'\n    case 6 | 7 | 8:\n        s = 'лето'\n    case _:\n        s = 'осень'\nprint(s)",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие фрагменты выведут ровно 5 строк(и)?",
+"options": [
+"for c in 'hello': print(c)",
+"for i in range(0, 10, 2): print(i)",
+"i = 1\nwhile i < 32:\n    print(i)\n    i *= 2",
+"for i in range(5, 0): print(i)",
+"for i in range(1, 5): print(i)",
+"i = 5\nwhile i > 0:\n    print(i)\n    i -= 2"
+],
+"answer": [
+0,
+1,
+2
+],
+"explain": "Посчитайте количество повторений тела цикла.",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 4 — ровно целое число 4 (тип int)?",
+"options": [
+"4 * 1.0",
+"5 // 1 - 1",
+"len('aaaa')",
+"int('4')",
+"abs(-4)",
+"8 / 2"
+],
+"answer": [
+1,
+2,
+3,
+4
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 4.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие выражения имеют значение 5 — ровно целое число 5 (тип int)?",
+"options": [
+"5 * 1.0",
+"10 / 2",
+"6 - 1",
+"6 // 1 - 1",
+"10 // 2",
+"len('aaaaa')"
+],
+"answer": [
+2,
+3,
+4,
+5
+],
+"explain": "Деление <code>/</code> и умножение на <code>1.0</code> дают float (например, 5.0), а не int.",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "При каких введённых значениях x программа выведет YES?",
+"options": [
+"1",
+"-3",
+"-2",
+"0",
+"-4",
+"-1"
+],
+"answer": [
+2,
+4
+],
+"explain": "Подставьте каждое значение в условие и проверьте обе части (and — обе истинны, or — хотя бы одна).",
+"code": "x = int(input())\nif not (x > -1) and x % 2 == 0:\n    print('YES')\nelse:\n    print('NO')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"C",
+"B",
+"A\nB",
+"A"
+],
+"answer": 1,
+"explain": "В цепочке if–elif–else выполняется только первая ветка с истинным условием; граничные значения проверяйте по знаку (&gt; или &gt;=). Программа выводит: <code>B</code>.",
+"code": "x = 1\nif x > 19:\n    print('A')\nelif x >= 0:\n    print('B')\nelse:\n    print('C')",
+"codeOptions": true
+},
+{
+"type": "multiple",
+"q": "Какие записи образцов в case допустимы?",
+"options": [
+"case x == 3:",
+"case > 5:",
+"case 1 | 2 | 3:",
+"case n if n > 0:",
+"case _:",
+"case [x, y]:"
+],
+"answer": [
+2,
+3,
+4,
+5
+],
+"explain": "Сравнения пишут в guard (if), а не прямо в образце."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"None",
+"+3=5",
+"2+3=",
+"2+3=5"
+],
+"answer": 3,
+"explain": "Цикл for c in s перебирает символы строки по одному слева направо. Программа выводит: <code>2+3=5</code>.",
+"code": "s = '2+3=5'\nt = ''\nfor c in s:\n    if c not in t:\n        t += c\nprint(t)",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"МАМА МЫЛА РАМУ",
+"False",
+"14",
+"Ошибка"
+],
+"answer": 1,
+"explain": "Методы строк не изменяют исходную строку, а возвращают новый результат; find возвращает −1, если подстроки нет, а index — ошибку. Программа выводит: <code>False</code>.",
+"code": "s = 'мама мыла раму'\nprint(s.startswith('B'))",
+"codeOptions": true
+},
+{
+"type": "matching",
+"q": "Дан фрагмент программы. Сопоставьте значение x и значение r после его выполнения.<pre>if x &lt; 0:\n    r = 'A'\nelif x &lt; 8:\n    r = 'B'\nelif x == 8:\n    r = 'C'\nelse:\n    r = 'D'</pre>",
+"pairs": [
+{
+"left": "x = -1",
+"right": "A"
+},
+{
+"left": "x = 6",
+"right": "B"
+},
+{
+"left": "x = 8",
+"right": "C"
+},
+{
+"left": "x = 11",
+"right": "D"
+}
+],
+"explain": "Проверяйте условия сверху вниз: срабатывает первое истинное."
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"I",
+"0",
+"II",
+"IV"
+],
+"answer": 3,
+"explain": "Сначала проверяется внешнее условие, затем — вложенное внутри выбранной ветки. Программа выводит: <code>IV</code>.",
+"code": "a = 7\nb = -5\nif a > 0:\n    if b > 0:\n        print('I')\n    else:\n        print('IV')\nelse:\n    if b > 0:\n        print('II')\n    else:\n        print('III')",
+"codeOptions": true
+},
+{
+"type": "single",
+"q": "Что выведет программа?",
+"options": [
+"6",
+"9",
+"10",
+"18"
+],
+"answer": 1,
+"explain": "range(a, b, step) не включает b. Переберите значения i и выполните тело цикла для каждого. Программа выводит: <code>9</code>.",
+"code": "s = 0\nfor i in range(1, 6, 2):\n    s += i\nprint(s)",
 "codeOptions": true
 }
 ]
