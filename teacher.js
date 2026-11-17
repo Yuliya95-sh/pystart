@@ -182,11 +182,14 @@
     const mods = h(`<div class="card" style="margin-bottom:14px"><h2 style="margin-top:0">По модулям</h2><div class="t-mods"></div></div>`);
     C.modules.filter((m) => m.status !== "soon").forEach((m) => {
       const v = s.mods && s.mods[m.id] != null ? Number(s.mods[m.id]) : 0;
-      const qz = quizzes.filter((e) => e.module === m.id);
+      const mine = quizzes.filter((e) => e.module === m.id);
+      const qz = mine.filter((e) => !String(e.item).includes(":bank"));
+      const tr = mine.filter((e) => String(e.item).includes(":bank"));
       const best = qz.length ? Math.max(...qz.map((e) => Number(e.score) || 0)) : null;
+      const trBest = tr.length ? Math.max(...tr.map((e) => Number(e.score) || 0)) : null;
       mods.querySelector(".t-mods").appendChild(h(`<div class="t-mod"><div class="small"><b>${esc(modTitle(C, m.id))}</b></div>
         <div class="t-pct"><div class="bar"><span style="width:${v}%"></span></div><b>${v}%</b></div>
-        <div class="small muted">${best != null ? `тест: лучший ${best}%, попыток ${qz.length}` : "тест не начат"}</div></div>`));
+        <div class="small muted">${best != null ? `тест: лучший ${best}%, попыток ${qz.length}` : "тест не начат"}${trBest != null ? ` · тренажёр: лучший ${trBest}%, попыток ${tr.length}` : ""}</div></div>`));
     });
     body.appendChild(mods);
 

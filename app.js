@@ -942,24 +942,34 @@ score = <span class="n">int</span>(<span class="n">input</span>())
   function viewQuiz(m, vn) {
     const el = h(`<div class="container"></div>`);
     el.appendChild(moduleHeader(m, "quiz"));
-    let quiz = m.quiz, recKey = m.id, title = "Итоговый тест модуля";
+    let quiz = m.quiz, recKey = m.id, title = "Итоговый тест модуля", cur = null;
+    // вариант "final" — прежний итоговый тест: хранится под ключом модуля, чтобы не потерять старые результаты
+    const keyOf = (x) => (x.id === "final" ? m.id : `${m.id}:${x.id}`);
     if (m.quizzes) {
       vn = Math.min(Math.max(0, vn | 0), m.quizzes.length - 1);
-      const v = m.quizzes[vn];
-      quiz = v.questions; recKey = `${m.id}:${v.id}`; title = `Вариант ${vn + 1}. ${v.title}`;
+      cur = m.quizzes[vn];
+      quiz = cur.questions; recKey = keyOf(cur);
+      title = cur.label || cur.id === "final" ? cur.title : `Вариант ${vn + 1}. ${cur.title}`;
       const nav = h(`<div class="lesson-nav"></div>`);
       m.quizzes.forEach((x, k) => {
-        const r = Store.data.quiz[`${m.id}:${x.id}`];
-        nav.appendChild(h(`<a class="lesson-pill ${k === vn ? "active" : ""}" href="#/m/${m.id}/quiz/${k}"><span class="check ${r && r.passed ? "on" : ""}"></span>Вариант ${k + 1}${r ? ` · ${r.best}%` : ""}</a>`));
+        const r = Store.data.quiz[keyOf(x)];
+        const lab = x.id === "final" ? "📝 Итоговый тест" : x.label || `Вариант ${k + 1}`;
+        nav.appendChild(h(`<a class="lesson-pill ${k === vn ? "active" : ""}" href="#/m/${m.id}/quiz/${k}"><span class="check ${r && r.passed ? "on" : ""}"></span>${lab}${r ? ` · ${r.best}%` : ""}</a>`));
       });
       el.appendChild(nav);
     }
+    const introText = cur && cur.bank
+      ? "Тренажёр: 100 вопросов в 4 частях — один ответ, несколько ответов, соответствие. Результат сохраняется, но на зачёт модуля не влияет: зачёт даёт итоговый тест."
+      : cur && cur.id === "final"
+        ? "Типы вопросов: один ответ, несколько ответов, соответствие, ввод ответа. Сдача этого теста засчитывает модуль. Для тренировки есть 100 вопросов в частях «Тренажёр 1–4»."
+        : m.quizzes ? "Вопросы опираются на общий контекст — ситуацию и программу, как в ЕНТ. Модуль зачтён, если сдан хотя бы один вариант."
+          : "Типы вопросов: один ответ, несколько ответов, соответствие, ввод ответа.";
     const maxScore = quiz.reduce((s, q) => s + qMax(q), 0);
     const prev = Store.data.quiz[recKey];
     const intro = h(`<div class="card" style="margin-bottom:16px"><div class="quiz-intro">
       <div style="flex:1;min-width:240px"><h2 style="margin-top:0">${esc(title)}</h2>
       <p class="muted" style="margin:0">${quiz.length} вопросов · максимум ${maxScore} баллов · зачёт от ${QUIZ_PASS}%.<br>
-      ${m.quizzes ? "Вопросы опираются на общий контекст — ситуацию и программу, как в ЕНТ. Модуль зачтён, если сдан хотя бы один вариант." : "Типы вопросов: один ответ, несколько ответов, соответствие, ввод ответа."}</p></div>
+      ${introText}</p></div>
       ${prev ? `<div><div class="small muted">Лучший результат</div><b style="font-size:24px">${prev.best}%</b> ${prev.passed ? '<span class="badge ok">зачёт</span>' : ""}<div class="small muted">попыток: ${prev.attempts}</div></div>` : ""}
     </div></div>`);
     el.appendChild(intro);
@@ -997,7 +1007,8 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       });
       const pct = Math.round((score / maxScore) * 100);
       const passed = pct >= QUIZ_PASS;
-      const keys = recKey === m.id ? [m.id] : [recKey, m.id];   // для вариантов храним и общий итог модуля
+      // для вариантов храним и общий итог модуля; тренажёр (counts: false) на зачёт не влияет
+      const keys = recKey === m.id ? [m.id] : cur && cur.counts === false ? [recKey] : [recKey, m.id];
       keys.forEach((key) => {
         const rec = Store.data.quiz[key] || { best: 0, attempts: 0, passed: false };
         rec.attempts++; rec.last = pct; rec.best = Math.max(rec.best, pct); rec.passed = rec.passed || passed;
