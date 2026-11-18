@@ -39,16 +39,54 @@
     return r.json();
   }
 
+  // Google-таблица превращала результат «1/5» в дату. Восстанавливаем такие старые записи:
+  // число пройденных тестов не больше общего, поэтому берём меньшее из «день / месяц».
+  function fixScore(s) {
+    s = String(s ?? "");
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+      const d = new Date(s);
+      const a = d.getDate(), b = d.getMonth() + 1;
+      return `${Math.min(a, b)} из ${Math.max(a, b)}`;
+    }
+    return s.replace(/^(\d+)\/(\d+)$/, "$1 из $2");
+  }
+
+  function resultBadge(e) {
+    if (e.type === "check") {
+      if (ok(e.ok)) return `<span class="tl-badge good">✓ решено</span>`;
+      const sc = fixScore(e.score);
+      return `<span class="tl-badge bad">✗ ${esc(sc)}${sc ? " тестов" : ""}</span>`;
+    }
+    if (e.type === "quiz") return `<span class="tl-badge ${ok(e.ok) ? "good" : "bad"}">${esc(e.score)}% · ${ok(e.ok) ? "сдан" : "не сдан"}</span>`;
+    if (e.type === "lesson") return `<span class="tl-badge good">✓ изучен</span>`;
+    return "";
+  }
+
+  // Подряд идущие одинаковые действия одного ученика (например, 5 неудачных проверок одной задачи) — одной строкой
+  function compact(list) {
+    const out = [];
+    for (const e of list) {
+      const p = out[out.length - 1];
+      if (p && p.sid === e.sid && p.type === e.type && p.module === e.module && p.item === e.item && String(p.ok) === String(e.ok) && e.type !== "quiz") {
+        p.times = (p.times || 1) + 1;
+        continue;
+      }
+      out.push(Object.assign({}, e));
+    }
+    return out;
+  }
+
   function eventLine(C, e, withName) {
     const [ic, label] = TYPE[e.type] || ["•", e.type];
-    const res = e.type === "check" ? (ok(e.ok) ? `<span class="t-ok">✓ решено</span>` : `<span class="t-bad">✗ ${esc(e.score)}</span>`)
-      : e.type === "quiz" ? `<span class="${ok(e.ok) ? "t-ok" : "t-bad"}">${esc(e.score)}%${ok(e.ok) ? " · сдан" : " · не сдан"}</span>` : "";
-    return `<div class="tl-row ${e.type}">
+    const what = e.type === "check" ? `Задача «${esc(e.title)}»` : e.type === "quiz" ? esc(e.title || "Тест") : e.type === "lesson" ? `Урок «${esc(e.title)}»` : esc(e.title || label);
+    return `<div class="tl-row ev-${esc(e.type)}">
       <span class="tl-time">${when(e.ts || e.at)}</span>
-      <span class="tl-ic">${ic}</span>
-      <span class="tl-body">${withName ? `<b>${esc(e.name)}</b> <span class="muted">${esc(e.cls)}</span> · ` : ""}${label}${e.module ? ` · <span class="muted">${esc(modTitle(C, e.module))}</span>` : ""}${e.title ? ` · ${esc(e.title)}` : ""}
-        ${e.detail ? `<div class="small muted">${esc(e.detail)}</div>` : ""}</span>
-      <span class="tl-res">${res}</span></div>`;
+      <div class="tl-body">
+        ${withName ? `<div class="tl-who"><b>${esc(e.name)}</b> <span class="tl-cls">${esc(e.cls)}</span></div>` : ""}
+        <div class="tl-what"><span class="tl-ic">${ic}</span> ${what}${e.times > 1 ? ` <span class="tl-times">× ${e.times} ${e.times < 5 ? "попытки" : "попыток"}</span>` : ""}</div>
+        <div class="tl-meta">${e.module ? esc(modTitle(C, e.module)) : label}${e.detail ? ` · ${esc(e.detail)}` : ""}</div>
+      </div>
+      <span class="tl-res">${resultBadge(e)}</span></div>`;
   }
 
   function view(C) {
@@ -153,7 +191,7 @@
     const feed = h(`<div class="card"><div class="t-feed-head"><h2 style="margin:0">Лента действий</h2>
       <label class="small"><input type="checkbox" ${state.showOpens ? "checked" : ""}> показывать открытия страниц</label></div><div class="tl"></div></div>`);
     feed.querySelector("input").onchange = (e) => { state.showOpens = e.target.checked; renderAll(C, body); };
-    const evs = events.filter((e) => (state.showOpens || e.type !== "open") && (!state.filterCls || String(e.cls) === state.filterCls)).slice(0, 150);
+    const evs = compact(events.filter((e) => (state.showOpens || e.type !== "open") && (!state.filterCls || String(e.cls) === state.filterCls))).slice(0, 150);
     feed.querySelector(".tl").innerHTML = evs.length ? evs.map((e) => eventLine(C, e, true)).join("") : `<p class="muted">Пока пусто.</p>`;
     body.appendChild(h(`<h2>Последние действия</h2>`));
     body.appendChild(feed);
@@ -199,7 +237,8 @@
     const hard = Object.values(byTask).filter((t) => t.fails >= 3).sort((a, b) => b.fails - a.fails).slice(0, 10);
     if (hard.length) {
       body.appendChild(h(`<div class="card" style="margin-bottom:14px"><h2 style="margin-top:0">Где трудно</h2>
-        ${hard.map((t) => `<div class="tl-row"><span class="tl-ic">⚠️</span><span class="tl-body">${esc(modTitle(C, t.e.module))} · ${esc(t.e.title)}</span><span class="tl-res"><span class="${t.solved ? "t-ok" : "t-bad"}">${t.fails} неудачных · ${t.solved ? "в итоге решил(а)" : "не решено"}</span></span></div>`).join("")}</div>`));
+        ${hard.map((t) => `<div class="tl-row"><span class="tl-time">⚠️</span><div class="tl-body"><div class="tl-what">Задача «${esc(t.e.title)}»</div><div class="tl-meta">${esc(modTitle(C, t.e.module))}</div></div>
+          <span class="tl-res"><span class="tl-badge ${t.solved ? "good" : "bad"}">${t.fails} неудачных · ${t.solved ? "в итоге решил(а)" : "не решено"}</span></span></div>`).join("")}</div>`));
     }
 
     const tl = h(`<div class="card"><div class="t-feed-head"><h2 style="margin:0">Вся история</h2>

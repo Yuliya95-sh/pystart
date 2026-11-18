@@ -900,7 +900,8 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       if (window.EPTrack) {
         const fb = results.find((r) => !r.pass);
         EPTrack.log({ type: "check", module: m.id, item: task.id, title: (task.extra ? "Отработка: " : "") + task.title, ok: all,
-          score: `${passed}/${results.length}`, detail: fb ? `Тест №${fb.index + 1}${fb.test.hidden ? " (скрытый)" : ""}: ${fb.reason}` : "", code });
+          // «2 из 5», а не «2/5»: Google-таблица превращает дробь в дату
+          score: `${passed} из ${results.length}`, detail: fb ? `Тест №${fb.index + 1}${fb.test.hidden ? " (скрытый)" : ""}: ${fb.reason}` : "", code });
       }
       box.className = "verdict " + (all ? "ok" : "bad");
       if (all) {
