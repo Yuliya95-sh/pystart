@@ -536,6 +536,29 @@ def _pystart_exec(code, stdin, extra, echo):
     return card;
   }
 
+  // Запись одного ответа для журнала учителя: текст вопроса, ответ ученика, верный ответ, баллы
+  function answerRecord(q, ans, got) {
+    const plain = (s, n) => String(s ?? "").replace(/<[^>]+>/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim().slice(0, n);
+    const opt = (k) => plain(q.options[k], 200);
+    let a = "", c = "";
+    if (q.type === "single") { a = ans === undefined ? "" : opt(ans); c = opt(q.answer); }
+    else if (q.type === "multiple") { a = (ans || []).map(opt).join(" | "); c = q.answer.map(opt).join(" | "); }
+    else if (q.type === "matching") {
+      a = q.pairs.map((p, k) => `${plain(p.left, 60)} → ${plain((ans || {})[k], 60) || "—"}`).join("\n");
+      c = q.pairs.map((p) => `${plain(p.left, 60)} → ${plain(p.right, 60)}`).join("\n");
+    } else if (q.type === "fill") { a = plain(ans, 200); c = plain(q.answer[0], 200); }
+    const r = { t: q.type, q: plain(q.q, 220), a, c, g: got, m: qMax(q) };
+    if (q.code) r.code = String(q.code).slice(0, 400);
+    return r;
+  }
+  // В ячейку таблицы помещается ~20 000 символов: при нехватке места сначала убираем код вопросов
+  function packAnswers(list) {
+    let s = JSON.stringify({ answers: list });
+    if (s.length > 19000) s = JSON.stringify({ answers: list.map(({ code, ...r }) => r) });
+    if (s.length > 19000) s = JSON.stringify({ answers: list.map(({ code, ...r }) => ({ ...r, q: r.q.slice(0, 90), a: r.a.slice(0, 120), c: r.c.slice(0, 120) })) });
+    return s.slice(0, 19500);
+  }
+
   function showQuizReview(card, q, ans) {
     const got = scoreQuestion(q, ans), max = qMax(q);
     card.classList.add(got === max ? "res-ok" : got > 0 ? "res-part" : "res-bad");
@@ -1001,10 +1024,12 @@ score = <span class="n">int</span>(<span class="n">input</span>())
 
       let score = 0;
       const wrong = [];
+      const answers = [];   // ответы ученика — для страницы учителя
       $$(".q", qBox).forEach((card, i) => {
         const got = showQuizReview(card, quiz[i], state[i]);
         score += got;
         if (got < qMax(quiz[i])) wrong.push(i + 1);
+        answers.push(answerRecord(quiz[i], state[i], got));
       });
       const pct = Math.round((score / maxScore) * 100);
       const passed = pct >= QUIZ_PASS;
@@ -1018,7 +1043,8 @@ score = <span class="n">int</span>(<span class="n">input</span>())
       Store.save();
       renderSidebar();
       if (window.EPTrack) EPTrack.log({ type: "quiz", module: m.id, item: recKey, title, ok: passed, score: pct,
-        detail: `Баллы ${score} из ${maxScore}` + (wrong.length ? `; ошибки в вопросах: ${wrong.join(", ")}` : "; без ошибок") });
+        detail: `Баллы ${score} из ${maxScore}` + (wrong.length ? `; ошибки в вопросах: ${wrong.join(", ")}` : "; без ошибок"),
+        code: packAnswers(answers) });
 
       const res = h(`<div class="card" style="margin-bottom:16px">
         <div class="score-card">${scoreRing(pct)}

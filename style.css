@@ -641,3 +641,42 @@ body.gate-open { overflow: hidden; }
   .topbar { gap: 8px; padding: 0 10px; }
   .brand-logo { width: 30px; height: 30px; }
 }
+
+/* ---------- Страница ученика у учителя: задачи и ответы ---------- */
+.t-tabs { margin: 4px 0 14px; }
+.t-tabs button { font: inherit; cursor: pointer; }
+.t-tabs .count { font-size: 11.5px; background: var(--surface-2); color: var(--text-2); padding: 0 7px; border-radius: 99px; }
+details.t-task { border-top: 1px solid var(--border); padding: 10px 0; }
+details.t-task:first-of-type { border-top: 0; }
+details.t-task > summary, details.t-quiz > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; list-style: none; }
+details.t-task > summary::-webkit-details-marker, details.t-quiz > summary::-webkit-details-marker { display: none; }
+details.t-task > summary::before, details.t-quiz > summary::before { content: "▸"; color: var(--text-3); transition: transform .15s; }
+details[open].t-task > summary::before, details[open].t-quiz > summary::before { transform: rotate(90deg); }
+.t-task-title { font-weight: 600; flex: 1 1 200px; }
+.t-task-meta { font-size: 12.5px; color: var(--text-3); }
+.t-attempts { margin: 10px 0 0 18px; display: grid; gap: 10px; }
+.t-attempt { border-left: 3px solid var(--border); padding-left: 12px; }
+.t-attempt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
+.t-pre { margin: 6px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--border); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; }
+details.t-quiz { margin-bottom: 12px; }
+.t-only { display: inline-flex; gap: 6px; align-items: center; color: var(--text-2); margin-bottom: 10px; }
+.t-answers { margin-top: 12px; display: grid; gap: 10px; }
+.t-ans { border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.t-ans.good { border-left-color: var(--ok); }
+.t-ans.part { border-left-color: var(--warn); }
+.t-ans.bad { border-left-color: var(--bad); }
+.t-ans-mark { font-weight: 700; }
+.t-ans.good .t-ans-mark { color: var(--ok); }
+.t-ans.part .t-ans-mark { color: var(--warn); }
+.t-ans.bad .t-ans-mark { color: var(--bad); }
+.t-ans-q { margin: 4px 0 2px; font-size: 14px; }
+.t-ans-row { display: flex; gap: 8px; margin-top: 6px; font-size: 13.5px; align-items: baseline; }
+.t-ans-label { flex: none; color: var(--text-3); width: 120px; }
+.t-ans-val { white-space: pre-wrap; font-family: "JetBrains Mono", monospace; font-size: 13px; overflow-wrap: anywhere; }
+.t-ans-row.bad .t-ans-val { color: var(--bad); }
+.t-ans-row.part .t-ans-val { color: var(--warn); }
+.t-ans-row.good .t-ans-val { color: var(--ok); }
+@media (max-width: 560px) {
+  .t-ans-row { flex-direction: column; gap: 0; }
+  .t-attempts { margin-left: 4px; }
+}

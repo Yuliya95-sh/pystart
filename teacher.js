@@ -82,7 +82,7 @@
     return `<div class="tl-row ev-${esc(e.type)}">
       <span class="tl-time">${when(e.ts || e.at)}</span>
       <div class="tl-body">
-        ${withName ? `<div class="tl-who"><b>${esc(e.name)}</b> <span class="tl-cls">${esc(e.cls)}</span></div>` : ""}
+        ${withName ? `<div class="tl-who"><a href="#/teacher/${encodeURIComponent(e.sid)}"><b>${esc(e.name)}</b></a> <span class="tl-cls">${esc(e.cls)}</span></div>` : ""}
         <div class="tl-what"><span class="tl-ic">${ic}</span> ${what}${e.times > 1 ? ` <span class="tl-times">× ${e.times} ${e.times < 5 ? "попытки" : "попыток"}</span>` : ""}</div>
         <div class="tl-meta">${e.module ? esc(modTitle(C, e.module)) : label}${e.detail ? ` · ${esc(e.detail)}` : ""}</div>
       </div>
@@ -231,16 +231,119 @@
     });
     body.appendChild(mods);
 
-    // Трудные задачи: много неудачных проверок
-    const byTask = {};
-    checks.forEach((e) => { const k = e.module + "." + e.item; (byTask[k] = byTask[k] || { e, fails: 0, solved: false }); if (ok(e.ok)) byTask[k].solved = true; else byTask[k].fails++; });
-    const hard = Object.values(byTask).filter((t) => t.fails >= 3).sort((a, b) => b.fails - a.fails).slice(0, 10);
-    if (hard.length) {
-      body.appendChild(h(`<div class="card" style="margin-bottom:14px"><h2 style="margin-top:0">Где трудно</h2>
-        ${hard.map((t) => `<div class="tl-row"><span class="tl-time">⚠️</span><div class="tl-body"><div class="tl-what">Задача «${esc(t.e.title)}»</div><div class="tl-meta">${esc(modTitle(C, t.e.module))}</div></div>
-          <span class="tl-res"><span class="tl-badge ${t.solved ? "good" : "bad"}">${t.fails} неудачных · ${t.solved ? "в итоге решил(а)" : "не решено"}</span></span></div>`).join("")}</div>`));
-    }
+    // ---------- вкладки: задачи / тесты / история ----------
+    const tabs = [
+      ["tasks", `💻 Задачи <span class="count">${new Set(checks.map((e) => e.module + "." + e.item)).size}</span>`],
+      ["tests", `📝 Тесты <span class="count">${quizzes.length}</span>`],
+      ["history", "🕘 История"],
+    ];
+    const nav = h(`<div class="lesson-nav t-tabs">${tabs.map(([k, l]) => `<button type="button" class="lesson-pill" data-tab="${k}">${l}</button>`).join("")}</div>`);
+    const pane = h(`<div></div>`);
+    body.appendChild(nav);
+    body.appendChild(pane);
+    const show = (k) => {
+      state.studentTab = k;
+      nav.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.tab === k));
+      pane.innerHTML = "";
+      ({ tasks: tasksPane, tests: testsPane, history: historyPane })[k](C, pane, events, checks, quizzes);
+    };
+    nav.querySelectorAll("button").forEach((b) => (b.onclick = () => show(b.dataset.tab)));
+    show(state.studentTab || "tasks");
+  }
 
+  const codeBox = (code) => {
+    const pre = document.createElement("pre");
+    pre.className = "t-pre";
+    pre.textContent = code;
+    return pre;
+  };
+
+  /* Задачи: по модулям, по каждой задаче — статус, число попыток, код каждой попытки */
+  function tasksPane(C, pane, events, checks) {
+    if (!checks.length) { pane.appendChild(h(`<div class="card"><p style="margin:0">Ученик ещё не отправлял решения на проверку.</p></div>`)); return; }
+    const byTask = new Map();
+    checks.forEach((e) => {   // события идут от новых к старым
+      const k = e.module + "." + e.item;
+      if (!byTask.has(k)) byTask.set(k, { module: e.module, item: e.item, title: e.title, list: [] });
+      byTask.get(k).list.push(e);
+    });
+    const hard = [...byTask.values()].filter((t) => t.list.filter((e) => !ok(e.ok)).length >= 3);
+    if (hard.length) {
+      pane.appendChild(h(`<div class="note warn" style="margin-bottom:14px"><div class="note-title">Где трудно</div>
+        ${hard.map((t) => `<div>• ${esc(t.title)} — ${t.list.filter((e) => !ok(e.ok)).length} неудачных проверок, ${t.list.some((e) => ok(e.ok)) ? "в итоге решено" : "<b>не решено</b>"}</div>`).join("")}</div>`));
+    }
+    const order = (mid) => C.modules.findIndex((m) => m.id === mid);
+    const groups = {};
+    byTask.forEach((t) => (groups[t.module] = groups[t.module] || []).push(t));
+    Object.keys(groups).sort((a, b) => order(a) - order(b)).forEach((mid) => {
+      const card = h(`<div class="card" style="margin-bottom:14px"><h2 style="margin:0 0 8px;text-transform:none;font-size:17px">${esc(modTitle(C, mid))}</h2></div>`);
+      groups[mid].forEach((t) => {
+        const solved = t.list.some((e) => ok(e.ok));
+        const last = t.list[0];
+        const d = h(`<details class="t-task"><summary>
+          <span class="t-task-title">${esc(t.title)}</span>
+          <span class="t-task-meta">${t.list.length} ${t.list.length === 1 ? "проверка" : t.list.length < 5 ? "проверки" : "проверок"} · ${when(last.ts || last.at)}</span>
+          <span class="tl-badge ${solved ? "good" : "bad"}">${solved ? "✓ решено" : "✗ не решено"}</span></summary><div class="t-attempts"></div></details>`);
+        const box = d.querySelector(".t-attempts");
+        t.list.forEach((e, i) => {
+          const a = h(`<div class="t-attempt"><div class="t-attempt-head"><b>Попытка ${t.list.length - i}</b> · <span class="muted">${when(e.ts || e.at)}</span> ${resultBadge(e)}</div>
+            ${e.detail ? `<div class="small muted">${esc(e.detail)}</div>` : ""}</div>`);
+          if (e.code) a.appendChild(codeBox(e.code));
+          box.appendChild(a);
+        });
+        card.appendChild(d);
+      });
+      pane.appendChild(card);
+    });
+  }
+
+  /* Тесты: каждая попытка с ответами ученика на каждый вопрос */
+  function testsPane(C, pane, events, checks, quizzes) {
+    if (!quizzes.length) { pane.appendChild(h(`<div class="card"><p style="margin:0">Ученик ещё не сдавал тесты.</p></div>`)); return; }
+    const top = h(`<label class="small t-only"><input type="checkbox" ${state.onlyWrong ? "checked" : ""}> показывать только вопросы с ошибками</label>`);
+    pane.appendChild(top);
+    const list = h(`<div></div>`);
+    pane.appendChild(list);
+    const draw = () => {
+      list.innerHTML = "";
+      quizzes.forEach((e, idx) => {
+        let data = null;
+        try { data = e.code ? JSON.parse(e.code) : null; } catch (x) { data = null; }
+        const ans = data && data.answers;
+        const d = h(`<details class="card t-quiz" ${idx === 0 ? "open" : ""}><summary>
+          <span class="t-task-title">${esc(e.title || "Тест")}</span>
+          <span class="t-task-meta">${esc(modTitle(C, e.module))} · ${when(e.ts || e.at)} · ${esc(e.detail || "")}</span>
+          ${resultBadge(e)}</summary><div class="t-answers"></div></details>`);
+        const box = d.querySelector(".t-answers");
+        if (!ans) box.appendChild(h(`<p class="small muted">Ответы по вопросам не сохранялись: тест пройден до обновления журнала.</p>`));
+        else {
+          ans.forEach((r, i) => {
+            if (state.onlyWrong && r.g === r.m) return;
+            const cls = r.g === r.m ? "good" : r.g > 0 ? "part" : "bad";
+            const mark = r.g === r.m ? "✓" : r.g > 0 ? "◐" : "✗";
+            const q = h(`<div class="t-ans ${cls}"><div class="t-ans-head"><span class="t-ans-mark">${mark}</span> <b>Вопрос ${i + 1}</b> <span class="muted small">· ${r.g} из ${r.m} балл.</span></div>
+              <div class="t-ans-q">${esc(r.q)}</div></div>`);
+            if (r.code) q.appendChild(codeBox(r.code));
+            const row = (label, val, kind) => {
+              const el = h(`<div class="t-ans-row ${kind}"><span class="t-ans-label">${label}</span><span class="t-ans-val"></span></div>`);
+              el.querySelector(".t-ans-val").textContent = val || "— (нет ответа)";
+              return el;
+            };
+            q.appendChild(row("Ответ ученика:", r.a, cls));
+            if (r.g !== r.m) q.appendChild(row("Правильно:", r.c, "good"));
+            box.appendChild(q);
+          });
+          if (!box.children.length) box.appendChild(h(`<p class="small muted">Ошибок нет.</p>`));
+        }
+        list.appendChild(d);
+      });
+    };
+    top.querySelector("input").onchange = (ev) => { state.onlyWrong = ev.target.checked; draw(); };
+    draw();
+  }
+
+  /* История: все действия по времени */
+  function historyPane(C, pane, events) {
     const tl = h(`<div class="card"><div class="t-feed-head"><h2 style="margin:0">Вся история</h2>
       <label class="small"><input type="checkbox" ${state.showOpens ? "checked" : ""}> показывать открытия страниц</label></div><div class="tl"></div></div>`);
     const draw = () => {
@@ -248,9 +351,9 @@
       tl.querySelector(".tl").innerHTML = evs.length ? "" : `<p class="muted">Пока пусто.</p>`;
       evs.forEach((e) => {
         const row = h(eventLine(C, e, false));
-        if (e.code) {
-          const d = h(`<details class="t-code"><summary class="small">код решения</summary><pre></pre></details>`);
-          d.querySelector("pre").textContent = e.code;
+        if (e.code && e.type === "check") {
+          const d = h(`<details class="t-code"><summary class="small">код решения</summary></details>`);
+          d.appendChild(codeBox(e.code));
           row.querySelector(".tl-body").appendChild(d);
         }
         tl.querySelector(".tl").appendChild(row);
@@ -258,7 +361,7 @@
     };
     tl.querySelector("input").onchange = (e) => { state.showOpens = e.target.checked; draw(); };
     draw();
-    body.appendChild(tl);
+    pane.appendChild(tl);
   }
 
   window.EPTeacher = { view };
