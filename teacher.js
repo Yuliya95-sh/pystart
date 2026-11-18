@@ -35,8 +35,15 @@
     Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
     u.searchParams.set("key", getKey());
     u.searchParams.set("_", Date.now());
-    const r = await fetch(u);
-    return r.json();
+    let r;
+    try { r = await fetch(u); } catch (x) { throw new Error("нет связи с Google (проверьте интернет)"); }
+    const txt = await r.text();
+    try { return JSON.parse(txt); } catch (x) {
+      // Google вернул страницу ошибки вместо данных — достаём из неё текст ошибки скрипта
+      const plain = txt.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, "\n").split("\n").map((s) => s.trim()).filter(Boolean);
+      const msg = plain.find((s) => /Error|Ошибка|Exception|превышен|exceeded|строка|line/i.test(s) && s.length > 8) || `HTTP ${r.status}`;
+      throw new Error("скрипт таблицы ответил ошибкой: " + msg.slice(0, 300));
+    }
   }
 
   // Google-таблица превращала результат «1/5» в дату. Восстанавливаем такие старые записи:
@@ -124,12 +131,17 @@
     el.appendChild(body);
     head.querySelector('[data-a="out"]').onclick = () => { setKey(""); state.data = null; window.dispatchEvent(new HashChangeEvent("hashchange")); };
     const load = async () => {
+      let j;
+      try { j = await api({ action: "summary" }); }
+      catch (x) { body.innerHTML = `<p class="t-bad">Не удалось загрузить журнал: ${esc(x.message)}.</p><p class="small muted">Попробуйте «↻ Обновить». Если ошибка повторяется — пришлите её текст.</p>`; return; }
+      if (!j.ok) { body.innerHTML = `<p class="t-bad">${esc(j.error)}</p>`; if (/парол/i.test(j.error || "")) setKey(""); return; }
+      state.data = j;
       try {
-        const j = await api({ action: "summary" });
-        if (!j.ok) { body.innerHTML = `<p class="t-bad">${esc(j.error)}</p>`; if (/парол/i.test(j.error || "")) setKey(""); return; }
-        state.data = j;
         if (sid) await renderStudent(C, body, sid); else renderAll(C, body);
-      } catch (x) { body.innerHTML = `<p class="t-bad">Нет связи с таблицей. Попробуйте обновить позже.</p>`; }
+      } catch (x) {
+        console.error(x);
+        body.insertAdjacentHTML("afterbegin", `<p class="t-bad">Ошибка отображения: ${esc(x.message)}. Пришлите этот текст — исправим.</p>`);
+      }
     };
     head.querySelector('[data-a="reload"]').onclick = load;
     if (state.data && !sid) renderAll(C, body);
@@ -200,14 +212,23 @@
   async function renderStudent(C, body, sid) {
     const s = state.data.students.find((x) => x.sid === sid);
     if (!s) { body.innerHTML = `<p>Ученик не найден.</p>`; return; }
-    const j = await api({ action: "student", sid });
-    const events = (j.events || []);
+    let events, warn = "";
+    try {
+      const j = await api({ action: "student", sid });
+      if (!j.ok) throw new Error(j.error || "ошибка скрипта");
+      events = j.events || [];
+    } catch (x) {
+      // запасной вариант: последние события из общей ленты (без кода решений)
+      events = (state.data.events || []).filter((e) => e.sid === sid).map((e) => Object.assign({}, e, { code: "" }));
+      warn = `Полную историю загрузить не удалось (${x.message}). Показаны только последние действия из общей ленты, без кода и ответов.`;
+    }
     const checks = events.filter((e) => e.type === "check");
     const quizzes = events.filter((e) => e.type === "quiz");
     const solvedSet = new Set(checks.filter((e) => ok(e.ok)).map((e) => e.module + "." + e.item));
     const tries = checks.length;
 
     body.innerHTML = "";
+    if (warn) body.appendChild(h(`<div class="note warn" style="margin-bottom:14px"><div class="note-title">Не всё загрузилось</div><p>${esc(warn)}</p></div>`));
     body.appendChild(h(`<div class="card" style="margin-bottom:14px"><h2 style="margin:0 0 4px;text-transform:none">${esc(s.name)} <span class="muted" style="font-weight:500">${esc(s.cls)}</span></h2>
       <p class="small muted" style="margin:0">Первый вход: ${when(s.first)} · последняя активность: ${when(s.last)} · действий: ${s.actions}</p></div>`));
     body.appendChild(h(`<div class="stats ep-stats" style="margin-bottom:16px">
